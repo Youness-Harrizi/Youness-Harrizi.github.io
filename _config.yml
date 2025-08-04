@@ -1,12 +1,12 @@
 # Site settings
 title: "Youness Harrizi - Cybersecurity Blog"
 description: "Personal cybersecurity blog sharing research, tutorials, and insights on penetration testing, threat analysis, and security best practices."
-email: your-email@example.com
+email: younessharrizi4@gmail.com
 url: "https://youness-harrizi.github.io"
 baseurl: ""
 
 # Author information
-author:
+author: 
   name: "Youness Harrizi"
   email: "younessharrizi4@gmail.com"
   bio: "Cybersecurity professional passionate about penetration testing, vulnerability research, and security education."
@@ -14,7 +14,6 @@ author:
 # Social links
 github_username: Youness-Harrizi
 linkedin_username: harrizi-youness
-#twitter_username: your-twitter-username
 
 # Jekyll settings
 markdown: kramdown
@@ -26,16 +25,9 @@ plugins:
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-seo-tag
-  - jekyll-paginate
-
-# Pagination
-paginate: 5
-paginate_path: "/page:num/"
 
 # Build settings
 theme: minima
-# or if using a different theme:
-# remote_theme: "mmistakes/minimal-mistakes"
 
 # Exclude from processing
 exclude:
@@ -48,50 +40,7 @@ exclude:
   - vendor/ruby/
   - README.md
 
-# Collections (for organizing content)
-collections:
-  tutorials:
-    output: true
-    permalink: /:collection/:name/
-  tools:
-    output: true
-    permalink: /:collection/:name/
-
-# Default layouts for different content types
-defaults:
-  - scope:
-      path: ""
-      type: "posts"
-    values:
-      layout: "post"
-      author: "Youness Harrizi"
-  - scope:
-      path: ""
-      type: "tutorials"
-    values:
-      layout: "post"
-  - scope:
-      path: ""
-      type: "tools"
-    values:
-      layout: "post"
-
-# SEO and analytics (optional)
-google_analytics: "UA-XXXXXXXX-X"  # Replace with your GA tracking ID
-google_site_verification: "your-verification-code"
-
-# Comments (optional - using Disqus)
-disqus:
-  shortname: "your-disqus-shortname"
-
-# Social sharing (optional)
-twitter:
-  username: your-twitter-username
-  card: summary
-
-# Site navigation
+# Header navigation
 header_pages:
   - about.md
-  - categories.md
-  - tags.md
   - contact.md
