@@ -1,0 +1,246 @@
+---
+layout: post
+title: "Active Directory 101: Introduction and Fundamentals"
+date: 2025-08-04 10:00:00 +0000
+categories: [active-directory, fundamentals]
+tags: [ad, windows, security, authentication, enterprise]
+description: "Understanding the backbone of Windows enterprise networks - A comprehensive introduction to Active Directory fundamentals"
+---
+
+# Active Directory 101: Introduction and Fundamentals
+
+*Understanding the Backbone of Windows Enterprise Networks*
+
+---
+
+## What is Active Directory?
+
+<div class="key-concept" markdown="1">
+Active Directory (AD) is a **hierarchical directory service** developed by Microsoft that stores information about objects on a network and makes this data available to users and administrators.
+</div>
+
+## Key Components
+
+Active Directory consists of several essential components:
+
+- **📁 Directory Structure** - Hierarchical organization of network resources
+- **🔐 Authentication System** - Central authentication referential  
+- **👥 Account Management** - Users, computers, and group management
+- **📋 Policy Management** - Centralized configuration and security policies
+
+---
+
+## Core Terminology You Need to Know
+
+Understanding these terms is crucial for working with Active Directory:
+
+### 1. Fully Qualified Domain Name (FQDN)
+
+```
+W10-XXXXXXX.YYYY.ZZZZ
+```
+
+- The complete DNS name of a computer or domain
+- Usually follows the forest structure for easier administration
+
+### 2. Distinguished Name (DN)
+
+```
+CN=W10-XXXX,OU=France,OU=Computers,DC=company,DC=COM
+```
+
+- Unique identifier for each object in AD
+- Composed of Relative Distinguished Names (RDN)
+- Follows a hierarchical path structure
+
+### 3. SAM Account Name
+
+```
+DOMAIN\W10-XXXXXX
+```
+
+- Traditional "login" format for AD objects
+- Maximum 20 characters
+- Used for both users and computers
+
+### 4. User Principal Name (UPN)
+
+```
+username.lastname@domain.local
+```
+
+- Email-like format for user authentication
+- Can be aligned with actual email addresses
+- More user-friendly than SAM account names
+
+---
+
+## Security Fundamentals
+
+### Security Principals
+
+<div class="key-concept" markdown="1">
+**Definition:** Any entity that can be authenticated by the system
+</div>
+
+Security principals include:
+- **👤 Users**
+- **💻 Computers** 
+- **⚙️ Service accounts**
+- **👥 Security groups**
+
+### Security Identifiers (SIDs)
+
+```
+S-1-5-21-7623811015-3361044348-030300820-1013
+```
+
+Breaking down the SID structure:
+- **S** - Indicates this is a SID
+- **1** - Revision level (always 1)
+- **5** - Identifier authority (always 5 for domain principals)
+- **21-762...** - Domain identifier
+- **1013** - Relative identifier (RID)
+
+### Important RIDs to Remember
+
+<div class="important-rids" markdown="1">
+- **500** = Administrator
+- **501** = Guest  
+- **512** = Domain Admins
+- **513** = Domain Users
+</div>
+
+---
+
+## Active Directory Schema
+
+<div class="key-concept" markdown="1">
+The AD Schema is like a **blueprint** that defines what can exist in your Active Directory
+</div>
+
+### What Does the Schema Define?
+
+- **🏗️ Object Classes** - Types of objects that can be created (users, computers, groups)
+- **📝 Attributes** - Properties that objects can have (name, email, phone)
+- **📏 Content Rules** - What attributes are required or optional
+
+### Why Does the Schema Matter?
+
+- Ensures consistency across the entire forest
+- Defines what can and cannot exist in your AD
+- **⚠️ Modifications affect the entire forest (be careful!)**
+
+---
+
+## Security Support Providers (SSP)
+
+The authentication mechanisms Windows uses:
+
+### Types of SSPs
+
+- **🎫 Kerberos** - Primary authentication protocol (most secure)
+- **🔒 NTLM** - Legacy authentication (less secure, but still widely used)
+- **🌐 Digest** - For web-based authentication
+- **🔄 Negotiate** - Automatically chooses between Kerberos and NTLM
+
+### Why Should You Care About SSPs?
+
+- Different protocols have different security implications
+- Some attacks target specific protocols
+- Understanding SSPs helps in hardening your environment
+
+---
+
+## Key Takeaways
+
+<div class="takeaway-box" markdown="1">
+✅ **Active Directory is more than just user management** - It's the backbone of Windows enterprise networks
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **Every object has multiple identifiers** - DN, SID, SAM, and potentially UPN
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **Security is built on principals and identifiers** - Understanding SIDs is crucial for security
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **The schema defines what's possible** - It's the rulebook for your AD environment
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **Multiple authentication protocols coexist** - Each with its own strengths and weaknesses
+</div>
+
+---
+
+## Coming Next: Section 2 - Access Control Lists (ACLs)
+
+<div class="coming-next" markdown="1">
+In the next section, we'll dive deep into how Active Directory controls who can do what with:
+
+- Understanding Access Tokens
+- Security Descriptors  
+- DACLs and SACLs
+- Real-world ACL vulnerabilities
+</div>
+
+---
+
+*This post is part of the Active Directory fundamentals series. Stay tuned for more in-depth coverage of AD security concepts and practical implementations.*
+
+## Custom CSS for Enhanced Styling
+
+Add this to your Jekyll theme's CSS file (`assets/css/style.css` or similar):
+
+```css
+.key-concept {
+    background: rgba(100, 181, 246, 0.1);
+    border-left: 4px solid #64b5f6;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+}
+
+.takeaway-box {
+    background: rgba(76, 175, 80, 0.1);
+    border-left: 4px solid #4caf50;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+}
+
+.coming-next {
+    background: rgba(255, 152, 0, 0.1);
+    border-left: 4px solid #ff9800;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+}
+
+.important-rids {
+    background: rgba(244, 67, 54, 0.1);
+    border-left: 4px solid #f44336;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+}
+
+code {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+pre code {
+    display: block;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid #64b5f6;
+}
+```
