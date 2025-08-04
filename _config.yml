@@ -1,46 +1,26 @@
-# Site settings
-title: "Youness Harrizi - Cybersecurity Blog"
-description: "Personal cybersecurity blog sharing research, tutorials, and insights on penetration testing, threat analysis, and security best practices."
+title: Youness Harrizi - Cybersecurity Blog
+description: Personal cybersecurity blog sharing research, tutorials, and insights on penetration testing, threat analysis, and security best practices.
 email: younessharrizi4@gmail.com
-url: "https://youness-harrizi.github.io"
+url: https://youness-harrizi.github.io
 baseurl: ""
 
-# Author information
-author: 
-  name: "Youness Harrizi"
-  email: "younessharrizi4@gmail.com"
-  bio: "Cybersecurity professional passionate about penetration testing, vulnerability research, and security education."
+author:
+  name: Youness Harrizi
+  email: younessharrizi4@gmail.com
 
-# Social links
 github_username: Youness-Harrizi
 linkedin_username: harrizi-youness
 
-# Jekyll settings
 markdown: kramdown
 highlighter: rouge
-permalink: /:categories/:year/:month/:day/:title/
+theme: minima
 
-# Plugins
 plugins:
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-seo-tag
 
-# Build settings
-theme: minima
-
-# Exclude from processing
 exclude:
   - Gemfile
   - Gemfile.lock
-  - node_modules
-  - vendor/bundle/
-  - vendor/cache/
-  - vendor/gems/
-  - vendor/ruby/
   - README.md
-
-# Header navigation
-header_pages:
-  - about.md
-  - contact.md
