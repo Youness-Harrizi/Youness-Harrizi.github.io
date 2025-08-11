@@ -12,7 +12,7 @@ description: "Master DPAPI exploitation with DonPAPI - extracting Windows secret
 
 ---
 
-## What is DPAPI? 🤔
+## What is DPAPI?
 
 <div class="key-concept" markdown="1">
 **DPAPI = Data Protection API**
@@ -30,7 +30,7 @@ The Data Protection API is a Windows feature that allows applications to store s
 
 ---
 
-## 🎯 What Data Can We Extract?
+## What Data Can We Extract?
 
 DPAPI protects a treasure trove of sensitive information across different categories:
 
@@ -67,10 +67,10 @@ Automatically extracts and decrypts DPAPI-protected data from Windows systems
 
 ### DonPAPI Workflow
 
-1. **🔍 Scan** - Finds DPAPI blobs on target system
-2. **🔓 Decrypt** - Uses user credentials to decrypt data
-3. **📊 Parse** - Extracts readable passwords & tokens
-4. **📝 Report** - Generates organized HTML report
+1. **Scan** - Finds DPAPI blobs on target system
+2. **Decrypt** - Uses user credentials to decrypt data
+3. **Parse** - Extracts readable passwords & tokens
+4. **Report** - Generates organized HTML report
 
 ---
 
@@ -114,10 +114,10 @@ proxychains DonPAPI collect -d 'ESSOS.LOCAL' -u 'daenerys.targaryen' -p 'BurnThe
 
 | Data Type | Description | Value |
 |-----------|-------------|--------|
-| **🔑 LSA Secrets** | Service account passwords, machine credentials, cached domain credentials | High |
-| **🏆 DPAPI Masterkeys** | 7 masterkeys found - used to decrypt user data | Critical |
-| **📜 Certificates** | System certificates, user certificates, machine authentication certs | High |
-| **🌐 Browser Data** | Chrome/Edge passwords, cookies and tokens, saved form data | Medium |
+| **LSA Secrets** | Service account passwords, machine credentials, cached domain credentials | High |
+| **DPAPI Masterkeys** | 7 masterkeys found - used to decrypt user data | Critical |
+| **Certificates** | System certificates, user certificates, machine authentication certs | High |
+| **Browser Data** | Chrome/Edge passwords, cookies and tokens, saved form data | Medium |
 
 ---
 
@@ -136,15 +136,15 @@ proxychains DonPAPI gui
 
 The web interface provides organized tabs for analysis:
 
-- **📋 General Tab** - Overview of all collected data
-- **🍪 Cookies Tab** - Browser session tokens  
-- **🔐 Secrets Tab** - Extracted passwords
-- **📜 Certificates Tab** - Found certificates and keys
+- **General Tab** - Overview of all collected data
+- **Cookies Tab** - Browser session tokens  
+- **Secrets Tab** - Extracted passwords
+- **Certificates Tab** - Found certificates and keys
 
 ### Key Findings Example
 
 <div class="success-box" markdown="1">
-**🎯 Typical Discovery Results:**
+**Typical Discovery Results:**
 - **Computer:** BRAAVOS, MEEREEN, WINTERFELL
 - **Windows User:** SYSTEM
 - **Username:** VAGRANT
@@ -157,9 +157,9 @@ The web interface provides organized tabs for analysis:
 
 ### Certificate Attack Flow
 
-1. **🔍 Find Certificate** - DonPAPI extracts .pfx files
-2. **🎫 Get TGT** - Use certificate for Kerberos auth
-3. **🔑 Extract Hash** - Retrieve NT hash from TGT
+1. **Find Certificate** - DonPAPI extracts .pfx files
+2. **Get TGT** - Use certificate for Kerberos auth
+3. **Extract Hash** - Retrieve NT hash from TGT
 
 ### Certificate Authentication
 
