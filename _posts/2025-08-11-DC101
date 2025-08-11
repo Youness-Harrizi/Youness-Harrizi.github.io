@@ -1,0 +1,386 @@
+---
+layout: post
+title: "Active Directory 101: Domain Controllers"
+date: 2025-08-04 17:00:00 +0000
+categories: [active-directory, domain-controllers, infrastructure]
+tags: [domain-controllers, ntds-dit, fsmo-roles, sysvol, krbtgt, rodc]
+description: "Understanding Domain Controllers - the heart of Active Directory infrastructure, FSMO roles, NTDS.dit database, and critical security considerations"
+---
+
+# Active Directory 101: Domain Controllers
+*The Heart of Your Active Directory*
+
+---
+
+## What is a Domain Controller?
+
+Domain Controllers represent the cornerstone of any Active Directory infrastructure, serving multiple critical functions that make enterprise authentication and authorization possible. These specialized Windows Servers carry the responsibility of maintaining the authoritative copy of the Active Directory database while providing essential services to domain members.
+
+**Domain Controllers serve as:**
+
+1. **Windows Servers with a special role** - Dedicated infrastructure components
+2. **The authentication authority** for your domain - Central validation point
+3. **The keepers of all AD secrets** - Secure storage for sensitive data
+4. **Your most critical infrastructure** - Single points of failure requiring protection
+
+### Key Responsibilities
+
+Domain Controllers perform several essential functions that enable Active Directory operations across the enterprise:
+
+**Issue Kerberos tickets** through their Key Distribution Center (KDC) role, providing secure authentication tokens for users and services throughout the domain.
+
+**Validate passwords and authenticate users** by checking credentials against the authoritative account database and issuing appropriate authentication responses.
+
+**Store the AD database** in the NTDS.dit file, maintaining the complete directory information tree with all objects, attributes, and security information.
+
+**Host SYSVOL share** for Group Policy Objects and logon scripts, ensuring consistent policy deployment across all domain members.
+
+**Replicate changes** to other Domain Controllers, maintaining consistency and fault tolerance through multi-master replication mechanisms.
+
+---
+
+## The Crown Jewels: NTDS.dit
+
+<div class="crown-jewels" markdown="1">
+**The Active Directory database - literally everything is here!**
+</div>
+
+The NTDS.dit file represents the most valuable asset in any Active Directory environment, containing every piece of information needed to recreate the entire domain structure. This database file stores not just user accounts and passwords, but the complete organizational hierarchy and security model.
+
+### Default Location
+
+```
+C:\Windows\NTDS\ntds.dit
+```
+
+<div class="key-concept" markdown="1">
+**Pro tip:** Check the last modified date - it should be today! An outdated modification time may indicate replication issues or a compromised domain controller.
+</div>
+
+### What's Inside NTDS.dit?
+
+The database contains several categories of critical information:
+
+**All user accounts and password hashes** including both current and historical password information for every domain user, enabling authentication and supporting password history policies.
+
+**Computer accounts** for every domain-joined system, including servers, workstations, and service accounts that require network authentication.
+
+**Group memberships** showing all security and distribution groups along with their nested relationships and member assignments.
+
+**Trust passwords** for inter-domain and inter-forest trust relationships, enabling authentication across domain boundaries.
+
+**Every AD object and attribute** including organizational units, contacts, and custom schema extensions that define the complete directory structure.
+
+### Why Attackers Want NTDS.dit
+
+```
+NTDS.dit = All password hashes = Game Over
+```
+
+Successful extraction of the NTDS.dit file provides attackers with complete domain compromise capabilities. The password hashes contained within can be cracked offline or used directly in pass-the-hash attacks, while trust passwords enable lateral movement to connected domains and forests.
+
+---
+
+## SYSVOL: The Policy Store
+
+<div class="key-concept" markdown="1">
+SYSVOL represents a shared folder replicated between all domain controllers, serving as the central repository for Group Policy Objects and domain-wide scripts.
+</div>
+
+```
+\\[DOMAIN]\SYSVOL\
+```
+
+### What's Inside SYSVOL?
+
+```
+SYSVOL 
+├── Policies (GPOs live here) 
+├── Scripts (Logon/startup scripts) 
+└── [Other folders] (Often contain interesting files...)
+```
+
+### SYSVOL Security Concerns
+
+Several security considerations make SYSVOL an attractive target for attackers:
+
+**Any domain user can read SYSVOL** by default, providing access to Group Policy configurations and potentially sensitive scripts.
+
+**Old scripts might contain passwords** or other credentials that administrators embedded during initial setup or legacy configurations.
+
+**GPO preferences might have encrypted passwords** using the known AES key that Microsoft published, making these "encrypted" passwords easily decryptable by attackers.
+
+---
+
+## FSMO Roles: Special Responsibilities
+
+<div class="key-concept" markdown="1">
+**Flexible Single Master Operations (FSMO)**
+
+Special tasks that only one Domain Controller can perform at a time, preventing conflicts in multi-master replication scenarios.
+</div>
+
+### Forest-Wide Roles (One per forest)
+
+| Role | Controls | Impact When Down |
+|------|----------|------------------|
+| **Schema Master** | AD schema changes | Can't modify schema (usually not urgent) |
+| **Domain Naming Master** | Adding/removing domains | Can't add new domains (rarely urgent) |
+
+### Domain-Wide Roles (One per domain)
+
+| Role | Controls | Impact When Down |
+|------|----------|------------------|
+| **PDC Emulator** (MOST CRITICAL) | Password changes hub, Time sync, GPO management | Authentication issues, time drift |
+| **RID Master** | Hands out RID pools | Can't create new objects |
+| **Infrastructure Master** | Updates cross-domain references | Phantom objects in cross-domain scenarios |
+
+### Finding FSMO Role Holders
+
+```powershell
+# Find domain-wide FSMO roles 
+Get-ADDomain | Select PDCEmulator, RIDMaster, InfrastructureMaster
+
+# Find forest-wide FSMO roles 
+Get-ADForest | Select SchemaMaster, DomainNamingMaster
+```
+
+### Why FSMO Matters
+
+Understanding FSMO role placement proves essential for several operational considerations:
+
+**Know which DC is most critical** - The PDC Emulator typically requires the highest availability and performance.
+
+**Plan maintenance windows** - FSMO role holders may require special consideration during planned outages.
+
+**Prepare for disaster recovery** - Understanding role dependencies helps prioritize restoration efforts.
+
+---
+
+## Read-Only Domain Controllers (RODCs)
+
+RODCs provide a specialized deployment option designed for branch offices and other locations with limited physical security.
+
+### RODC Characteristics
+
+**Read-only NTDS.dit** means RODCs cannot make changes to the directory, only serve authentication requests from their cached copy.
+
+**Limited password replication** restricts which accounts have passwords cached locally, reducing the exposure if the RODC is compromised.
+
+**Different krbtgt account** creates a separate Kerberos service account, limiting the blast radius of RODC compromise.
+
+**Designed for branch offices** where physical security may be insufficient for traditional Domain Controllers.
+
+### RODC Security Benefits
+
+| Traditional DC | RODC |
+|----------------|------|
+| Compromised DC = Domain compromise | Compromised RODC ≠ Domain compromise |
+| Full credential exposure | Can be "disowned" if stolen |
+| Complete replication rights | Limited credential exposure |
+
+---
+
+## Domain Controller Security: The Stakes
+
+<div class="critical-warning" markdown="1">
+```
+DC Compromise = Domain Compromise = Forest Compromise
+```
+</div>
+
+### Why DC Compromise is Game Over
+
+Domain Controller compromise provides attackers with several devastating capabilities:
+
+**krbtgt hash access** enables forging any Kerberos ticket through Golden Ticket attacks, providing persistent domain administrator access.
+
+**All password hashes** can be extracted for offline cracking or direct use in pass-the-hash attacks against any domain account.
+
+**Replication rights** allow DCSync attacks from any network location, enabling remote extraction of sensitive data.
+
+**Trust passwords** provide pathways for lateral movement to other domains and forests within the enterprise.
+
+### Real Attack Scenario
+
+1. Attacker gains local administrator access on Domain Controller
+2. Dumps NTDS.dit database or performs DCSync operation
+3. Extracts krbtgt hash from dumped data
+4. Creates Golden Ticket for persistent access
+5. Becomes any user indefinitely (until krbtgt password changes)
+
+---
+
+## Protecting Domain Controllers
+
+### Step 1: Basic Hardening
+
+Fundamental protection measures form the foundation of Domain Controller security:
+
+**Physical security** requires Domain Controllers to be housed in locked server rooms with controlled access and environmental monitoring.
+
+**Priority patching** ensures Domain Controllers receive security updates before other systems, minimizing exposure to known vulnerabilities.
+
+**Minimize DC count** reduces the attack surface by limiting the number of high-value targets in the environment.
+
+**No local accounts** eliminates potential backdoors by requiring all authentication to go through domain mechanisms.
+
+**No unnecessary software** maintains focus on core directory services without introducing additional attack vectors.
+
+### Step 2: Advanced Protection (Tier 0)
+
+Advanced protection strategies implement administrative tier separation:
+
+**Dedicated admin workstations** (Privileged Access Workstations) ensure administrative access only occurs from secured, monitored systems.
+
+**No monitoring agents** prevents potential compromise through third-party software that could provide attackers with elevated access.
+
+**Isolated backup systems** protect recovery capabilities by ensuring backup infrastructure remains separate from production systems.
+
+**Separate update infrastructure** creates dedicated WSUS or SCCM servers for Domain Controller patch management.
+
+**Network segmentation** isolates Domain Controllers from general network traffic and implements strict firewall rules.
+
+### Step 3: Monitor Everything
+
+Comprehensive monitoring focuses on several key event types:
+
+**Event ID 4662** enables DCSync detection by monitoring directory service access attempts.
+
+**Event ID 4624** tracks logon events to identify unauthorized access attempts.
+
+**Event ID 4768** monitors Kerberos ticket requests for anomalous patterns.
+
+**Unusual NTDS.dit access** alerts on potential database extraction attempts.
+
+**Replication anomalies** identify potential tampering with directory synchronization.
+
+---
+
+## The krbtgt Account: Special Attention Required
+
+<div class="crown-jewels" markdown="1">
+**What Makes krbtgt Special?**
+
+- Used to sign ALL Kerberos tickets
+- Password never expires automatically
+- Created when domain is built
+- Same password might be 10+ years old!
+</div>
+
+### krbtgt Security Implications
+
+```
+Old krbtgt password + Previous admin/backup = Permanent backdoor
+```
+
+**Best Practices for krbtgt Management:**
+
+**Rotate krbtgt password periodically** to invalidate any compromised tickets and prevent Golden Ticket attacks.
+
+**Must rotate TWICE** due to password history requirements that maintain the previous password for compatibility.
+
+**Wait 10+ hours between rotations** to ensure proper replication and prevent authentication failures.
+
+**Monitor for Golden Ticket attacks** by watching for unusual Kerberos ticket requests and impossible authentication scenarios.
+
+---
+
+## Domain Controller Backup & Recovery
+
+### Critical Backup Components
+
+**System State backups** include the NTDS.dit database along with registry settings and other system components necessary for Domain Controller restoration.
+
+**SYSVOL backups** preserve Group Policy Objects and logon scripts that define domain-wide configurations.
+
+**Full Server Backup** enables bare metal recovery in catastrophic failure scenarios.
+
+### Backup Security
+
+Backup security requires special attention due to the sensitive nature of Domain Controller data:
+
+**Encrypted backups** protect password hashes and other sensitive information contained within the NTDS.dit database.
+
+**Secure storage** implements both physical and logical access controls to prevent unauthorized backup access.
+
+**Offsite copies** provide disaster recovery capabilities while maintaining appropriate security controls.
+
+**Test restores** in isolated environments verify backup integrity without exposing production systems.
+
+<div class="key-concept" markdown="1">
+**DSRM (Directory Services Restore Mode):** Local "break glass" administrator account that can be abused if registry settings are modified by attackers.
+</div>
+
+---
+
+## Common DC Vulnerabilities
+
+### 1. Print Spooler (PrintNightmare)
+
+<div class="vulnerability-alert" markdown="1">
+**Issue:** Enabled by default on Domain Controllers
+**Risk:** Multiple critical vulnerabilities enabling privilege escalation
+**Fix:** Disable Print Spooler service on all Domain Controllers
+</div>
+
+### 2. Zerologon (CVE-2020-1472)
+
+<div class="vulnerability-alert" markdown="1">
+**Issue:** Netlogon protocol cryptographic vulnerability
+**Risk:** Instant Domain Controller compromise with no credentials
+**Fix:** Apply security patches immediately and monitor for exploitation attempts
+</div>
+
+### 3. PetitPotam & Weak Backups
+
+<div class="vulnerability-alert" markdown="1">
+**PetitPotam:** Forces authentication via EFSRPC for NTLM relay attacks
+**Fix:** Disable EFS service or apply patches and implement EPA
+
+**Weak Backup Security:** Backup files accessible to non-administrators
+**Fix:** Implement proper backup infrastructure security controls
+</div>
+
+---
+
+## Key Takeaways
+
+<div class="takeaway-box" markdown="1">
+**Domain Controllers are your most critical assets** - One compromise equals total domain compromise
+</div>
+
+<div class="takeaway-box" markdown="1">
+**NTDS.dit contains everything** - Protect it like your organization depends on it
+</div>
+
+<div class="takeaway-box" markdown="1">
+**PDC Emulator is the most critical FSMO role** - Know its location and ensure high availability
+</div>
+
+<div class="takeaway-box" markdown="1">
+**krbtgt password age matters** - Old passwords create ancient backdoor risks
+</div>
+
+<div class="takeaway-box" markdown="1">
+**Physical security is AD security** - If someone can touch your DC, consider it compromised
+</div>
+
+<div class="takeaway-box" markdown="1">
+**Patch, monitor, and isolate your DCs** - They deserve special treatment beyond standard servers
+</div>
+
+---
+
+## Coming Next: Section 4 - NTLM Authentication
+
+The next section will explore NTLM authentication in detail:
+
+- How NTLM works (v1 and v2 protocols)
+- Why NTLM persists in modern environments
+- Pass-the-hash attack techniques
+- Relay attacks and defensive strategies
+
+---
+
+*This post is part of the Active Directory 101 series. Understanding Domain Controller architecture and security proves essential for maintaining enterprise Active Directory environments.*
