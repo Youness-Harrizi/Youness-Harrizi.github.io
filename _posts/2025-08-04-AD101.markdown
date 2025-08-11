@@ -23,10 +23,10 @@ Active Directory (AD) is a **hierarchical directory service** developed by Micro
 
 Active Directory consists of several essential components:
 
-- **📁 Directory Structure** - Hierarchical organization of network resources
-- **🔐 Authentication System** - Central authentication referential  
-- **👥 Account Management** - Users, computers, and group management
-- **📋 Policy Management** - Centralized configuration and security policies
+- **Directory Structure** - Hierarchical organization of network resources
+- **Authentication System** - Central authentication referential  
+- **Account Management** - Users, computers, and group management
+- **Policy Management** - Centralized configuration and security policies
 
 ---
 
@@ -40,8 +40,7 @@ Understanding these terms is crucial for working with Active Directory:
 W10-XXXXXXX.YYYY.ZZZZ
 ```
 
-- The complete DNS name of a computer or domain
-- Usually follows the forest structure for easier administration
+The complete DNS name of a computer or domain that usually follows the forest structure for easier administration.
 
 ### 2. Distinguished Name (DN)
 
@@ -49,9 +48,7 @@ W10-XXXXXXX.YYYY.ZZZZ
 CN=W10-XXXX,OU=France,OU=Computers,DC=company,DC=COM
 ```
 
-- Unique identifier for each object in AD
-- Composed of Relative Distinguished Names (RDN)
-- Follows a hierarchical path structure
+This serves as a unique identifier for each object in AD. It's composed of Relative Distinguished Names (RDN) and follows a hierarchical path structure that mirrors the directory organization.
 
 ### 3. SAM Account Name
 
@@ -59,9 +56,7 @@ CN=W10-XXXX,OU=France,OU=Computers,DC=company,DC=COM
 DOMAIN\W10-XXXXXX
 ```
 
-- Traditional "login" format for AD objects
-- Maximum 20 characters
-- Used for both users and computers
+The traditional "login" format for AD objects with a maximum of 20 characters. This naming convention is used for both users and computers across the domain.
 
 ### 4. User Principal Name (UPN)
 
@@ -69,9 +64,7 @@ DOMAIN\W10-XXXXXX
 username.lastname@domain.local
 ```
 
-- Email-like format for user authentication
-- Can be aligned with actual email addresses
-- More user-friendly than SAM account names
+An email-like format for user authentication that can be aligned with actual email addresses. This provides a more user-friendly alternative to SAM account names.
 
 ---
 
@@ -84,10 +77,10 @@ username.lastname@domain.local
 </div>
 
 Security principals include:
-- **👤 Users**
-- **💻 Computers** 
-- **⚙️ Service accounts**
-- **👥 Security groups**
+- **Users** - Individual user accounts
+- **Computers** - Machine accounts in the domain
+- **Service accounts** - Accounts for running services
+- **Security groups** - Collections of users or computers
 
 ### Security Identifiers (SIDs)
 
@@ -95,7 +88,7 @@ Security principals include:
 S-1-5-21-7623811015-3361044348-030300820-1013
 ```
 
-Breaking down the SID structure:
+Breaking down the SID structure reveals its components:
 - **S** - Indicates this is a SID
 - **1** - Revision level (always 1)
 - **5** - Identifier authority (always 5 for domain principals)
@@ -116,62 +109,60 @@ Breaking down the SID structure:
 ## Active Directory Schema
 
 <div class="key-concept" markdown="1">
-The AD Schema is like a **blueprint** that defines what can exist in your Active Directory
+The AD Schema functions like a **blueprint** that defines what can exist in your Active Directory environment.
 </div>
 
 ### What Does the Schema Define?
 
-- **🏗️ Object Classes** - Types of objects that can be created (users, computers, groups)
-- **📝 Attributes** - Properties that objects can have (name, email, phone)
-- **📏 Content Rules** - What attributes are required or optional
+The schema establishes several critical elements:
+
+- **Object Classes** - Types of objects that can be created (users, computers, groups)
+- **Attributes** - Properties that objects can have (name, email, phone)
+- **Content Rules** - What attributes are required or optional
 
 ### Why Does the Schema Matter?
 
-- Ensures consistency across the entire forest
-- Defines what can and cannot exist in your AD
-- **⚠️ Modifications affect the entire forest (be careful!)**
+The schema plays a vital role because it ensures consistency across the entire forest and defines what can and cannot exist in your AD environment. However, modifications affect the entire forest, so changes must be made carefully.
 
 ---
 
 ## Security Support Providers (SSP)
 
-The authentication mechanisms Windows uses:
+Windows uses several authentication mechanisms through Security Support Providers:
 
 ### Types of SSPs
 
-- **🎫 Kerberos** - Primary authentication protocol (most secure)
-- **🔒 NTLM** - Legacy authentication (less secure, but still widely used)
-- **🌐 Digest** - For web-based authentication
-- **🔄 Negotiate** - Automatically chooses between Kerberos and NTLM
+- **Kerberos** - Primary authentication protocol (most secure)
+- **NTLM** - Legacy authentication (less secure, but still widely used)
+- **Digest** - For web-based authentication
+- **Negotiate** - Automatically chooses between Kerberos and NTLM
 
 ### Why Should You Care About SSPs?
 
-- Different protocols have different security implications
-- Some attacks target specific protocols
-- Understanding SSPs helps in hardening your environment
+Different protocols have varying security implications, and some attacks target specific protocols. Understanding SSPs helps in hardening your environment against potential threats.
 
 ---
 
 ## Key Takeaways
 
 <div class="takeaway-box" markdown="1">
-✅ **Active Directory is more than just user management** - It's the backbone of Windows enterprise networks
+Active Directory is more than just user management - it's the backbone of Windows enterprise networks
 </div>
 
 <div class="takeaway-box" markdown="1">
-✅ **Every object has multiple identifiers** - DN, SID, SAM, and potentially UPN
+Every object has multiple identifiers - DN, SID, SAM, and potentially UPN
 </div>
 
 <div class="takeaway-box" markdown="1">
-✅ **Security is built on principals and identifiers** - Understanding SIDs is crucial for security
+Security is built on principals and identifiers - understanding SIDs is crucial for security
 </div>
 
 <div class="takeaway-box" markdown="1">
-✅ **The schema defines what's possible** - It's the rulebook for your AD environment
+The schema defines what's possible - it's the rulebook for your AD environment
 </div>
 
 <div class="takeaway-box" markdown="1">
-✅ **Multiple authentication protocols coexist** - Each with its own strengths and weaknesses
+Multiple authentication protocols coexist - each with its own strengths and weaknesses
 </div>
 
 ---
@@ -179,7 +170,7 @@ The authentication mechanisms Windows uses:
 ## Coming Next: Section 2 - Access Control Lists (ACLs)
 
 <div class="coming-next" markdown="1">
-In the next section, we'll dive deep into how Active Directory controls who can do what with:
+The next section will explore how Active Directory controls access permissions with:
 
 - Understanding Access Tokens
 - Security Descriptors  
@@ -189,4 +180,4 @@ In the next section, we'll dive deep into how Active Directory controls who can 
 
 ---
 
-*This post is part of the Active Directory fundamentals series. Stay tuned for more in-depth coverage of AD security concepts and practical implementations.*
+*This post is part of the Active Directory fundamentals series. Future posts will cover more advanced AD security concepts and practical implementations.*
