@@ -226,17 +226,6 @@ Organizations can implement several defensive measures to protect against ADCS a
 **ESC8:** NTLM relay to HTTP certificate enrollment
 </div>
 
-### Remember
-
-Security professionals should always analyze certificate templates during assessments, recognize that ADCS misconfigurations can provide direct paths to domain administrator privileges, and understand that proper PKI hardening represents a crucial component of enterprise security posture.
-
-<div class="warning-box" markdown="1">
-**ADCS misconfigurations are common and extremely dangerous!**
-</div>
-
----
-
-*This post is part of the Active Directory 101 series. Additional posts in this series explore other advanced AD security topics and practical implementation strategies.*
 
 ## References
 
