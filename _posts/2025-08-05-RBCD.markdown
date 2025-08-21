@@ -308,10 +308,6 @@ RBCD attacks prove particularly effective in enterprise environments for several
 
 **Common Misconfigurations** plague many organizations where excessive computer object permissions exist due to poor access control practices. **Kerberos Legitimacy** means S4U requests appear as normal Kerberos activity to monitoring systems, making detection challenging. **High Impact** provides a direct path to Domain Admin privileges from seemingly limited initial access. **Difficult Detection** occurs because legitimate delegation mechanisms make it hard to distinguish malicious activity from normal operations.
 
----
-
-*This post is part of the Active Directory 101 series. RBCD represents one of the most sophisticated yet practical privilege escalation techniques in modern AD environments.*
-
 ## References
 
 - [Impacket Tools Suite](https://github.com/fortra/impacket)
