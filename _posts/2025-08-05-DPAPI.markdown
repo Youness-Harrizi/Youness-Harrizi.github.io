@@ -244,16 +244,6 @@ Always check user workstations for stored credentials and certificates
 
 ---
 
-## Pro Tips
-
-Security professionals should **target developer workstations** as these systems often contain high-value credentials for multiple environments and services. **Check browser data thoroughly** since modern attacks rely heavily on session tokens and saved authentication state. **Don't overlook certificates** because machine certificates can provide domain-level access that bypasses traditional authentication controls.
-
-**Use the web GUI** for analysis as visual organization proves much more efficient than parsing command-line output manually. **Correlate findings** by combining DPAPI data with other enumeration results to build comprehensive attack paths and understand the full scope of potential compromise.
-
----
-
-*This post is part of the Active Directory 101 series. Understanding DPAPI exploitation techniques proves crucial for both red team operations and defensive security strategies.*
-
 ## References
 
 - [DonPAPI Tool](https://github.com/login-securite/DonPAPI)
