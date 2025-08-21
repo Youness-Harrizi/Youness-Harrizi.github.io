@@ -372,15 +372,4 @@ Backup security requires special attention due to the sensitive nature of Domain
 
 ---
 
-## Coming Next: Section 4 - NTLM Authentication
-
-The next section will explore NTLM authentication in detail:
-
-- How NTLM works (v1 and v2 protocols)
-- Why NTLM persists in modern environments
-- Pass-the-hash attack techniques
-- Relay attacks and defensive strategies
-
----
-
 *This post is part of the Active Directory 101 series. Understanding Domain Controller architecture and security proves essential for maintaining enterprise Active Directory environments.*
