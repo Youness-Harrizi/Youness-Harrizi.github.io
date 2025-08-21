@@ -346,8 +346,6 @@ LSASS dumps are critical for:
 
 ---
 
-*This post is part of the Active Directory 101 series. LSASS memory analysis represents one of the most effective post-exploitation techniques for complete domain compromise.*
-
 ## References
 
 - [DumpIt by Comae Technologies](https://comae.com/)
