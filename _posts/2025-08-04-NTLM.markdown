@@ -341,17 +341,6 @@ Security teams should monitor for unusual authentication patterns, watch for cro
 
 ---
 
-## Remember
-
-NTLM relay attacks remain highly effective in modern enterprise environments due to widespread misconfigurations and legacy protocol support requirements. Cross-protocol capabilities make these attacks particularly dangerous, as they can bypass traditional network segmentation controls. Proper configuration of SMB signing and LDAP protections proves essential for organizational security, while regular testing with tools like NetExec helps identify vulnerable systems before attackers do.
-
-<div class="warning-box" markdown="1">
-**NTLM relay attacks can lead to complete domain compromise in misconfigured environments!**
-</div>
-
----
-
-*This post is part of the Active Directory attack techniques series. Understanding these fundamentals proves crucial for modern Windows network security.*
 
 ## References
 
