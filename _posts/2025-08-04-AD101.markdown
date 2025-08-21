@@ -166,18 +166,3 @@ Multiple authentication protocols coexist - each with its own strengths and weak
 </div>
 
 ---
-
-## Coming Next: Section 2 - Access Control Lists (ACLs)
-
-<div class="coming-next" markdown="1">
-The next section will explore how Active Directory controls access permissions with:
-
-- Understanding Access Tokens
-- Security Descriptors  
-- DACLs and SACLs
-- Real-world ACL vulnerabilities
-</div>
-
----
-
-*This post is part of the Active Directory fundamentals series. Future posts will cover more advanced AD security concepts and practical implementations.*
