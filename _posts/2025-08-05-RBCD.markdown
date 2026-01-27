@@ -72,28 +72,7 @@ mermaid: true
     <strong>The Core Vulnerability:</strong><br>
     The attribute <code>msDS-AllowedToActOnBehalfOfOtherIdentity</code> controls which services can impersonate users to a specific computer. If we can write to this attribute, we control who can access the machine.
   </div>
-
-  <p>The attack relies on the <strong>Kerberos S4U (Service for User)</strong> extensions:</p>
-  
-  <div class="mermaid">
-  sequenceDiagram
-    participant Attacker as Attacker (EvilPC)
-    participant KDC as Domain Controller
-    participant Target as Target Server
-    
-    Note over Attacker: 1. S4U2Self
-    Attacker->>KDC: "I need a ticket for Administrator to access myself"
-    KDC-->>Attacker: TGS (Admin -> EvilPC)
-    
-    Note over Attacker: 2. S4U2Proxy
-    Attacker->>KDC: "Admin wants to access Target via me. Can I get a ticket?"
-    KDC-->>Attacker: TGS (Admin -> Target)
-    
-    Note over Attacker: 3. Execution
-    Attacker->>Target: Access as Administrator!
-  </div>
-</div>
-
+   
 <div class="content-card">
   <h2>🔍 Phase 1: Reconnaissance</h2>
   <p>We use <strong>BloodHound</strong> to identify the vulnerability. We are looking for an edge that allows us to modify a computer object.</p>
