@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Active Directory 101: LSASS Dump 2025 - Memory Credential Extraction"
-date: 2025-08-04 15:00:00 +0000
+date: 2025-10-01 15:00:00 +0000
 categories: [active-directory, lsass, credential-extraction]
 tags: [lsass-dump, mimikatz, dumpit, memory-analysis, credential-harvesting, post-exploitation]
 description: "Master modern LSASS memory dumping and analysis techniques - from remote extraction to credential harvesting with Mimikatz in 2025"
