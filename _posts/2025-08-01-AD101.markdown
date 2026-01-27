@@ -1,77 +1,168 @@
 ---
 layout: post
-title: "Active Directory 101: The Hacker's Primer"
+title: "Active Directory 101: Introduction and Fundamentals"
 date: 2025-08-01 10:00:00 +0000
-categories: [Offensive Security, Active Directory]
-tags: [red-teaming, fundamentals, windows, ad]
-description: "A consultant's guide to the backbone of Windows enterprise networks."
-image: /assets/img/ad-banner.jpg # Optional: Add a path to a banner image
+categories: [active-directory, fundamentals]
+tags: [ad, windows, security, authentication, enterprise]
+description: "Understanding the backbone of Windows enterprise networks - A comprehensive introduction to Active Directory fundamentals"
 ---
 
-<div class="notice--info" markdown="1">
-**🚀 Executive Summary**
-Active Directory (AD) is the nervous system of 90% of enterprise networks. For a pentester, understanding AD's schema, authentication protocols (Kerberos vs NTLM), and object hierarchy is not optional—it is the prerequisite for moving laterally and escalating privileges.
-</div>
+# Active Directory 101: Introduction and Fundamentals
 
-## 1. What is Active Directory?
-
-At its core, Active Directory is a **hierarchical directory service**. It acts as the central authority that stores network object data and manages authentication/authorization.
-
-<div class="grid-container" markdown="1">
-<div class="card" markdown="1">
-**📂 Directory Structure** Hierarchical organization of all network resources (Forests, Trees, Domains, OUs).
-</div>
-
-<div class="card" markdown="1">
-**🔐 Authentication** The central referee for identity. It decides who is who (Kerberos/NTLM).
-</div>
-
-<div class="card" markdown="1">
-**👥 Account Mgmt** Centralized control of Users, Computers, and Service Accounts.
-</div>
-
-<div class="card" markdown="1">
-**🛡️ Policy (GPO)** Configuration enforcement and security baselines pushed to endpoints.
-</div>
-</div>
+*Understanding the Backbone of Windows Enterprise Networks*
 
 ---
 
-## 2. Core Terminology (The Target Language)
+## What is Active Directory?
 
-To enumerate a domain effectively, you must understand the addressing system.
+<div class="key-concept" markdown="1">
+Active Directory (AD) is a **hierarchical directory service** developed by Microsoft that stores information about objects on a network and makes this data available to users and administrators.
+</div>
 
-### Naming Conventions
+## Key Components
 
-| Type | Format | Context |
-|:---|:---|:---|
-| **FQDN** | `W10-X.CORP.LOCAL` | Complete DNS name; follows forest structure. |
-| **DN** | `CN=User,OU=Dev,DC=corp...` | The unique LDAP path to an object. |
-| **SAM** | `DOMAIN\User` | Legacy "Pre-Windows 2000" login format. |
-| **UPN** | `user@corp.local` | Modern, email-style login format. |
+Active Directory consists of several essential components:
 
-### Visualizing the Syntax
+- **Directory Structure** - Hierarchical organization of network resources
+- **Authentication System** - Central authentication referential  
+- **Account Management** - Users, computers, and group management
+- **Policy Management** - Centralized configuration and security policies
 
-<div class="terminal-window">
-  <div class="terminal-header">
-    <div class="red-btn"></div>
-    <div class="yellow-btn"></div>
-    <div class="green-btn"></div>
-    <span class="terminal-title">Active Directory Identifiers</span>
-  </div>
-  <div class="terminal-body" markdown="1">
-```bash
-# 1. Fully Qualified Domain Name (FQDN)
-Target: W10-XXXXXXX.YYYY.ZZZZ
+---
 
-# 2. Distinguished Name (DN)
-# The "Map Coordinates" of the object
+## Core Terminology You Need to Know
+
+Understanding these terms is crucial for working with Active Directory:
+
+### 1. Fully Qualified Domain Name (FQDN)
+
+```
+W10-XXXXXXX.YYYY.ZZZZ
+```
+
+The complete DNS name of a computer or domain that usually follows the forest structure for easier administration.
+
+### 2. Distinguished Name (DN)
+
+```
 CN=W10-XXXX,OU=France,OU=Computers,DC=company,DC=COM
+```
 
-# 3. SAM Account Name (Legacy)
-# Limit: 20 Characters
+This serves as a unique identifier for each object in AD. It's composed of Relative Distinguished Names (RDN) and follows a hierarchical path structure that mirrors the directory organization.
+
+### 3. SAM Account Name
+
+```
 DOMAIN\W10-XXXXXX
+```
 
-# 4. User Principal Name (UPN)
-# User Friendly
+The traditional "login" format for AD objects with a maximum of 20 characters. This naming convention is used for both users and computers across the domain.
+
+### 4. User Principal Name (UPN)
+
+```
 username.lastname@domain.local
+```
+
+An email-like format for user authentication that can be aligned with actual email addresses. This provides a more user-friendly alternative to SAM account names.
+
+---
+
+## Security Fundamentals
+
+### Security Principals
+
+<div class="key-concept" markdown="1">
+**Definition:** Any entity that can be authenticated by the system
+</div>
+
+Security principals include:
+- **Users** - Individual user accounts
+- **Computers** - Machine accounts in the domain
+- **Service accounts** - Accounts for running services
+- **Security groups** - Collections of users or computers
+
+### Security Identifiers (SIDs)
+
+```
+S-1-5-21-7623811015-3361044348-030300820-1013
+```
+
+Breaking down the SID structure reveals its components:
+- **S** - Indicates this is a SID
+- **1** - Revision level (always 1)
+- **5** - Identifier authority (always 5 for domain principals)
+- **21-762...** - Domain identifier
+- **1013** - Relative identifier (RID)
+
+### Important RIDs to Remember
+
+<div class="important-rids" markdown="1">
+- **500** = Administrator
+- **501** = Guest  
+- **512** = Domain Admins
+- **513** = Domain Users
+</div>
+
+---
+
+## Active Directory Schema
+
+<div class="key-concept" markdown="1">
+The AD Schema functions like a **blueprint** that defines what can exist in your Active Directory environment.
+</div>
+
+### What Does the Schema Define?
+
+The schema establishes several critical elements:
+
+- **Object Classes** - Types of objects that can be created (users, computers, groups)
+- **Attributes** - Properties that objects can have (name, email, phone)
+- **Content Rules** - What attributes are required or optional
+
+### Why Does the Schema Matter?
+
+The schema plays a vital role because it ensures consistency across the entire forest and defines what can and cannot exist in your AD environment. However, modifications affect the entire forest, so changes must be made carefully.
+
+---
+
+## Security Support Providers (SSP)
+
+Windows uses several authentication mechanisms through Security Support Providers:
+
+### Types of SSPs
+
+- **Kerberos** - Primary authentication protocol (most secure)
+- **NTLM** - Legacy authentication (less secure, but still widely used)
+- **Digest** - For web-based authentication
+- **Negotiate** - Automatically chooses between Kerberos and NTLM
+
+### Why Should You Care About SSPs?
+
+Different protocols have varying security implications, and some attacks target specific protocols. Understanding SSPs helps in hardening your environment against potential threats.
+
+---
+
+## Key Takeaways
+
+<div class="takeaway-box" markdown="1">
+Active Directory is more than just user management - it's the backbone of Windows enterprise networks
+</div>
+
+<div class="takeaway-box" markdown="1">
+Every object has multiple identifiers - DN, SID, SAM, and potentially UPN
+</div>
+
+<div class="takeaway-box" markdown="1">
+Security is built on principals and identifiers - understanding SIDs is crucial for security
+</div>
+
+<div class="takeaway-box" markdown="1">
+The schema defines what's possible - it's the rulebook for your AD environment
+</div>
+
+<div class="takeaway-box" markdown="1">
+Multiple authentication protocols coexist - each with its own strengths and weaknesses
+</div>
+
+---
