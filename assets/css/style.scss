@@ -1,0 +1,110 @@
+---
+# Only the main Sass file needs front matter (the dashes are enough)
+---
+
+@import "minima";
+
+// Custom Cybersecurity Aesthetic
+:root {
+  --accent-color: #00ff41; // Classic Matrix/Security Green
+  --bg-color: #0d1117;
+  --text-color: #c9d1d9;
+  --link-color: #58a6ff;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+}
+
+html {
+  background-color: var(--bg-color);
+}
+
+.site-title, .site-title:visited {
+  color: var(--accent-color) !important;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.site-nav .page-link {
+  color: var(--text-color) !important;
+}
+
+.site-nav .page-link:hover {
+  color: var(--accent-color) !important;
+}
+
+.post-link {
+  color: var(--link-color) !important;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.post-meta {
+  color: #8b949e;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--accent-color);
+  border-bottom: 1px solid #30363d;
+  padding-bottom: 0.3em;
+}
+
+.wrapper {
+  max-width: 900px;
+}
+
+code {
+  background-color: #161b22;
+  color: #ff7b72;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+pre {
+  background-color: #161b22 !important;
+  border: 1px solid #30363d;
+  padding: 16px;
+  border-radius: 6px;
+}
+
+.site-footer {
+  border-top: 1px solid #30363d;
+  background-color: #0d1117;
+}
+
+// Hero Section Styles
+.hero-section {
+  padding: 40px 0;
+  text-align: center;
+  border-bottom: 1px solid #30363d;
+  margin-bottom: 40px;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  color: #8b949e;
+}
+
+.btn-contact {
+  display: inline-block;
+  background-color: var(--accent-color);
+  color: #000 !important;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: bold;
+  margin-top: 20px;
+  text-decoration: none;
+}
+
+.btn-contact:hover {
+  opacity: 0.9;
+}

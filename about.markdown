@@ -4,15 +4,25 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+# 👋 Hello, I'm Youness Harrizi
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
+I am a **Cybersecurity Researcher and Penetration Tester** dedicated to uncovering vulnerabilities and securing enterprise environments. My primary focus lies in **Active Directory (AD) exploitation and defense**, where I explore the intricacies of identity management, delegation models, and cryptographic protocols.
 
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
+### 🛡️ Areas of Expertise
 
+- **Active Directory Security**: Advanced exploitation (Kerberoasting, AS-REP Roasting, RBCD) and hardening strategies.
+- **Windows Internals**: Analyzing system processes, memory (LSASS), and DPAPI for credential recovery.
+- **Vulnerability Research**: In-depth analysis of authentication protocols (NTLM, Kerberos, ADCS).
+- **Post-Exploitation**: Lateral movement techniques and privilege escalation paths.
 
-[jekyll-organization]: https://github.com/jekyll
+### 🚀 My Mission
+
+Through this blog, I aim to bridge the gap between complex security concepts and practical implementation. I believe that understanding the "how" behind an attack is the first step toward building a resilient defense.
+
+When I'm not deep-diving into domain controllers or auditing ACLs, you can find me contributing to the security community or exploring the latest trends in threat intelligence.
+
+---
+
+### 📬 Let's Connect
+
+Feel free to reach out via [LinkedIn](https://linkedin.com/in/harrizi-youness) or check out my research on [GitHub](https://github.com/Youness-Harrizi).
