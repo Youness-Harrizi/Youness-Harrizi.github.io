@@ -5,7 +5,7 @@ date: 2026-01-01 11:00:00 +0000
 categories: [active-directory, adcs, exploitation]
 tags: [adcs, certificates, esc1, esc5, esc8, privilege-escalation, pki]
 description: "Advanced attack techniques and exploitation methods for Active Directory Certificate Services - covering ESC1, ESC5, and ESC8 vulnerabilities"
-permalink: /adcs/exploitation/2026/01/01/ADCS01.html
+permalink: /active-directory/adcs/exploitation/2026/01/01/ADCS01.html
 ---
 
 # Active Directory Certificate Services (ADCS)
