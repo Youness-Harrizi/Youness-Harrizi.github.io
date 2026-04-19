@@ -1,152 +1,393 @@
 ---
-# Only the main Sass file needs front matter (the dashes are enough)
 ---
 
 @import "minima";
 
-// Custom Cybersecurity Aesthetic
+// ─── Design Tokens ───────────────────────────────────────────────────────────
 :root {
-  --accent-color: #00ff41; // Classic Matrix/Security Green
-  --bg-color: #0d1117;
-  --text-color: #c9d1d9;
-  --link-color: #58a6ff;
+  --bg:        #080b14;
+  --surface:   rgba(255,255,255,0.04);
+  --border:    rgba(255,255,255,0.08);
+  --accent:    #6366f1;
+  --accent-h:  #4f46e5;
+  --accent-l:  #818cf8;
+  --text:      #e2e8f0;
+  --muted:     #94a3b8;
+  --link:      #818cf8;
 }
 
-body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+// ─── Base ────────────────────────────────────────────────────────────────────
+html, body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
+  line-height: 1.7;
 }
 
-html {
-  background-color: var(--bg-color);
+a {
+  color: var(--link);
+  text-decoration: none;
 }
-
-.site-title, .site-title:visited {
-  color: var(--accent-color) !important;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.site-nav .page-link {
-  color: var(--text-color) !important;
-}
-
-.site-nav .page-link:hover {
-  color: var(--accent-color) !important;
-}
-
-.post-link {
-  color: var(--link-color) !important;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.post-meta {
-  color: #8b949e;
-  display: block;
-  font-size: 0.9rem;
-  margin-bottom: 5px;
-}
-
-// Post Formatting Utilities
-.key-concept, .vulnerability-alert, .warning-box, .success-box, .takeaway-box, .danger-box, .tool-showcase, .esc-vulnerability, .security-warning, .crown-jewels, .important-rids, .file-size-info {
-  padding: 15px;
-  margin: 20px 0;
-  border-radius: 6px;
-  border-left: 5px solid;
-}
-
-.key-concept, .tool-showcase {
-  background-color: #161b22;
-  border-left-color: var(--accent-color);
-  color: #c9d1d9;
-}
-
-.vulnerability-alert, .danger-box, .security-warning {
-  background-color: #2d1616;
-  border-left-color: #ff7b72;
-  color: #ffa198;
-}
-
-.warning-box {
-  background-color: #2b2112;
-  border-left-color: #d29922;
-  color: #e3b341;
-}
-
-.success-box {
-  background-color: #112116;
-  border-left-color: #3fb950;
-  color: #7ee787;
-}
-
-.takeaway-box, .esc-vulnerability, .crown-jewels, .important-rids, .file-size-info {
-  background-color: #161b22;
-  border-left-color: var(--link-color);
-  color: #58a6ff;
-  font-style: italic;
-}
+a:hover { color: var(--accent-h); }
 
 h1, h2, h3, h4, h5, h6 {
-  color: var(--accent-color);
-  border-bottom: 1px solid #30363d;
-  padding-bottom: 0.3em;
-}
-
-.wrapper {
-  max-width: 900px;
+  color: #fff;
+  font-weight: 700;
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 code {
-  background-color: #161b22;
-  color: #ff7b72;
-  padding: 2px 4px;
-  border-radius: 4px;
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 5px;
+  color: #a5b4fc;
+  padding: 2px 5px;
+  font-size: 0.875em;
 }
 
 pre {
-  background-color: #161b22 !important;
-  border: 1px solid #30363d;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px;
   padding: 16px;
-  border-radius: 6px;
 }
 
-.site-footer {
-  border-top: 1px solid #30363d;
-  background-color: #0d1117;
+pre code {
+  border: none !important;
+  padding: 0;
+  color: var(--text);
 }
 
-// Hero Section Styles
+.wrapper { max-width: 1000px; }
+
+// ─── Navigation ──────────────────────────────────────────────────────────────
+.site-header {
+  background: rgba(8,11,20,0.85) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border) !important;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.site-title, .site-title:visited {
+  color: var(--accent) !important;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-size: 1.1rem;
+}
+
+.site-nav {
+  background: transparent !important;
+  border: none !important;
+}
+.site-nav .page-link {
+  color: var(--muted) !important;
+  font-size: 0.9rem;
+}
+.site-nav .page-link:hover { color: var(--text) !important; }
+
+// ─── Hero ────────────────────────────────────────────────────────────────────
 .hero-section {
-  padding: 40px 0;
-  text-align: center;
-  border-bottom: 1px solid #30363d;
-  margin-bottom: 40px;
+  min-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 0 64px;
+}
+
+.hero-eyebrow {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
 }
 
 .hero-title {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
+  font-size: clamp(2.2rem, 6vw, 3.8rem);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin: 0 0 20px;
+  border: none;
 }
 
-.hero-subtitle {
+.typewriter-text {
   font-size: 1.2rem;
-  color: #8b949e;
+  color: var(--muted);
+  min-height: 2em;
+  display: block;
 }
 
-.btn-contact {
+.cursor {
+  color: var(--accent);
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+.hero-cta {
+  margin-top: 36px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+// ─── Buttons ─────────────────────────────────────────────────────────────────
+.btn {
   display: inline-block;
-  background-color: var(--accent-color);
-  color: #000 !important;
-  padding: 10px 20px;
-  border-radius: 5px;
-  font-weight: bold;
-  margin-top: 20px;
-  text-decoration: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
 }
 
-.btn-contact:hover {
-  opacity: 0.9;
+.btn-primary {
+  background: var(--accent);
+  color: #fff !important;
+  border: 1px solid transparent;
+}
+.btn-primary:hover { background: var(--accent-h); transform: translateY(-1px); color: #fff !important; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--text) !important;
+  border: 1px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent) !important; }
+
+// ─── Featured Research Section ───────────────────────────────────────────────
+.featured-research { padding: 20px 0 60px; }
+
+.section-heading {
+  font-size: 1.6rem;
+  color: #fff;
+  margin-bottom: 6px;
+  border: none;
+}
+
+.section-sub {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 0;
+}
+
+// ─── Post Cards Grid ─────────────────────────────────────────────────────────
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 32px;
+}
+
+.post-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.post-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(99,102,241,0.12);
+}
+
+.post-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.post-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(99,102,241,0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.post-date-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.post-card h3 {
+  font-size: 0.97rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.4;
+  border: none;
+}
+.post-card h3 a { color: inherit; }
+.post-card h3 a:hover { color: var(--accent-l); }
+
+.post-card p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.6;
+  flex: 1;
+  margin: 0;
+}
+
+.post-card-read {
+  font-size: 0.82rem;
+  color: var(--accent);
+  font-weight: 500;
+  align-self: flex-start;
+}
+.post-card-read:hover { color: var(--accent-l); }
+
+// ─── Blog Post Pages ─────────────────────────────────────────────────────────
+.post-header .post-title {
+  color: #fff;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  border: none;
+}
+
+.post-meta { color: var(--muted); font-size: 0.88rem; }
+
+.post-content h1, .post-content h2, .post-content h3 {
+  color: #fff;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3em;
+  margin-top: 2em;
+}
+.post-content h4, .post-content h5, .post-content h6 { color: var(--accent-l); border: none; }
+
+// ─── Post Utility Boxes ──────────────────────────────────────────────────────
+.key-concept, .vulnerability-alert, .warning-box, .success-box,
+.takeaway-box, .danger-box, .tool-showcase, .esc-vulnerability,
+.security-warning, .crown-jewels, .important-rids, .file-size-info {
+  padding: 15px 18px;
+  margin: 20px 0;
+  border-radius: 8px;
+  border-left: 4px solid;
+  font-size: 0.9rem;
+}
+
+.key-concept, .tool-showcase {
+  background: rgba(99,102,241,0.08);
+  border-left-color: var(--accent);
+  color: var(--text);
+}
+
+.vulnerability-alert, .danger-box, .security-warning {
+  background: rgba(239,68,68,0.08);
+  border-left-color: #f87171;
+  color: #fca5a5;
+}
+
+.warning-box {
+  background: rgba(234,179,8,0.08);
+  border-left-color: #facc15;
+  color: #fde68a;
+}
+
+.success-box {
+  background: rgba(34,197,94,0.08);
+  border-left-color: #4ade80;
+  color: #86efac;
+}
+
+.takeaway-box, .esc-vulnerability, .crown-jewels, .important-rids, .file-size-info {
+  background: rgba(129,140,248,0.08);
+  border-left-color: var(--link);
+  color: var(--link);
+  font-style: italic;
+}
+
+// ─── Post List (non-home pages) ──────────────────────────────────────────────
+.post-list {
+  list-style: none;
+  margin-left: 0;
+}
+.post-list li {
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0;
+}
+
+.post-link {
+  color: var(--text) !important;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.post-link:hover { color: var(--accent-l) !important; }
+
+// ─── Footer ──────────────────────────────────────────────────────────────────
+.site-footer {
+  background: transparent !important;
+  border-top: 1px solid var(--border) !important;
+  padding: 28px 0 !important;
+  margin-top: 60px;
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-copy {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--muted) !important;
+}
+.footer-link:hover { color: var(--text) !important; }
+
+// ─── Tables ──────────────────────────────────────────────────────────────────
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+}
+th {
+  background: rgba(99,102,241,0.15);
+  color: var(--accent-l);
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+}
+td {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+// ─── Blockquote ──────────────────────────────────────────────────────────────
+blockquote {
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  color: var(--muted);
+  padding: 12px 18px;
+  border-radius: 0 6px 6px 0;
+  font-style: italic;
 }
