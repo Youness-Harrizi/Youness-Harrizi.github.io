@@ -44,27 +44,62 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 code {
-  background: rgba(255,255,255,0.06) !important;
+  background: #161b2e !important;
   border: 1px solid rgba(255,255,255,0.08) !important;
   border-radius: 5px;
   color: #a5b4fc !important;
-  padding: 2px 5px;
+  padding: 2px 6px;
   font-size: 0.875em;
 }
 
 pre {
-  background: rgba(255,255,255,0.04) !important;
+  background: #0f1221 !important;
   border: 1px solid rgba(255,255,255,0.08) !important;
   border-radius: 8px;
-  padding: 16px;
+  padding: 20px !important;
+  overflow-x: auto;
 }
 
 pre code {
   border: none !important;
   background: transparent !important;
-  padding: 0;
+  padding: 0 !important;
+  color: #e2e8f0 !important;
+  font-size: 0.9rem;
+}
+
+// ─── Rouge Syntax Highlighter (dark theme) ───────────────────────────────────
+.highlight, .highlighter-rouge {
+  background: #0f1221 !important;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  margin: 20px 0;
+}
+
+.highlight pre, .highlight pre.highlight {
+  background: #0f1221 !important;
+  border: none !important;
+  border-radius: 8px;
+  margin: 0 !important;
+  padding: 20px !important;
   color: #e2e8f0 !important;
 }
+
+// Token colors for dark background
+.highlight .c, .highlight .c1, .highlight .cm, .highlight .cs { color: #6b7db3 !important; font-style: italic; }  // comments
+.highlight .k, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr { color: #c792ea !important; font-weight: bold; }  // keywords
+.highlight .s, .highlight .s1, .highlight .s2, .highlight .sb, .highlight .sc { color: #c3e88d !important; }  // strings
+.highlight .n, .highlight .nx { color: #e2e8f0 !important; }  // names
+.highlight .nv, .highlight .nb { color: #89ddff !important; }  // variables, builtins
+.highlight .m, .highlight .mi, .highlight .mf { color: #f78c6c !important; }  // numbers
+.highlight .o, .highlight .p  { color: #89ddff !important; }  // operators, punctuation
+.highlight .na, .highlight .nc { color: #ffcb6b !important; }  // attr names, classes
+.highlight .nt { color: #f07178 !important; }  // tags
+.highlight .err { color: #f07178 !important; background: transparent !important; }  // errors (remove red bg)
+.highlight .w  { color: #e2e8f0 !important; }  // whitespace
+.highlight .gh, .highlight .gp { color: #6366f1 !important; font-weight: bold; }  // prompt / header
+.highlight .gd { color: #f07178 !important; }  // deleted
+.highlight .gi { color: #c3e88d !important; }  // inserted
 
 .wrapper { max-width: 1000px !important; }
 
