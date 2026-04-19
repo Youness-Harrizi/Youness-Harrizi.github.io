@@ -4,25 +4,19 @@ title: About
 permalink: /about/
 ---
 
-# 👋 Hello, I'm Youness Harrizi
+# Youness Harrizi
 
-I am a **Cybersecurity Researcher and Penetration Tester** dedicated to uncovering vulnerabilities and securing enterprise environments. My primary focus lies in **Active Directory (AD) exploitation and defense**, where I explore the intricacies of identity management, delegation models, and cryptographic protocols.
+I break things for fun — and sometimes for work.
 
-### 🛡️ Areas of Expertise
+I'm into pentesting, Active Directory exploitation, Windows internals, and anything that involves poking at systems until they give up their secrets. I write about what I learn so others don't have to figure it out the hard way.
 
-- **Active Directory Security**: Advanced exploitation (Kerberoasting, AS-REP Roasting, RBCD) and hardening strategies.
-- **Windows Internals**: Analyzing system processes, memory (LSASS), and DPAPI for credential recovery.
-- **Vulnerability Research**: In-depth analysis of authentication protocols (NTLM, Kerberos, ADCS).
-- **Post-Exploitation**: Lateral movement techniques and privilege escalation paths.
+**What I spend most of my time on:**
 
-### 🚀 My Mission
-
-Through this blog, I aim to bridge the gap between complex security concepts and practical implementation. I believe that understanding the "how" behind an attack is the first step toward building a resilient defense.
-
-When I'm not deep-diving into domain controllers or auditing ACLs, you can find me contributing to the security community or exploring the latest trends in threat intelligence.
+- Active Directory attacks — Kerberos, NTLM, ADCS, delegation abuse
+- Credential extraction — LSASS, DPAPI, browser secrets
+- Post-exploitation and lateral movement
+- Understanding the *why* behind vulnerabilities, not just running tools
 
 ---
 
-### 📬 Let's Connect
-
-Feel free to reach out via [LinkedIn](https://linkedin.com/in/harrizi-youness) or check out my research on [GitHub](https://github.com/Youness-Harrizi).
+Find me on [LinkedIn](https://linkedin.com/in/harrizi-youness) or [GitHub](https://github.com/Youness-Harrizi).
