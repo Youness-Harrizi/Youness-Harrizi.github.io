@@ -69,17 +69,37 @@ pre code {
 }
 
 // ─── Rouge Syntax Highlighter (dark theme) ───────────────────────────────────
-.highlight, .highlighter-rouge {
+div.highlighter-rouge,
+figure.highlight,
+.highlight {
   background: #0f1221 !important;
-  border-radius: 8px;
+  background-color: #0f1221 !important;
+  border-radius: 8px !important;
   border: 1px solid rgba(255,255,255,0.08) !important;
-  margin: 20px 0;
+  margin: 20px 0 !important;
+  padding: 0 !important;
 }
 
-.highlight pre, .highlight pre.highlight {
+div.highlighter-rouge div.highlight,
+figure.highlight pre,
+.highlight div.highlight {
   background: #0f1221 !important;
+  background-color: #0f1221 !important;
   border: none !important;
-  border-radius: 8px;
+  border-radius: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+div.highlighter-rouge pre,
+div.highlighter-rouge pre.highlight,
+figure.highlight pre,
+.highlight pre,
+.highlight pre.highlight {
+  background: #0f1221 !important;
+  background-color: #0f1221 !important;
+  border: none !important;
+  border-radius: 8px !important;
   margin: 0 !important;
   padding: 20px !important;
   color: #e2e8f0 !important;
