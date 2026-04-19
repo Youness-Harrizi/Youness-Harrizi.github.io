@@ -110,7 +110,7 @@ title: Home
   (function() {
     var phrases = [
       "Active Directory Specialist",
-      "Windows Internals Researcher",
+      "Red Teamer",
       "Penetration Tester"
     ];
     var pi = 0, ci = 0, deleting = false;
