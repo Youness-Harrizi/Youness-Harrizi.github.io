@@ -1,0 +1,303 @@
+---
+layout: post
+title: "Active Directory 101: Access Control Lists (ACLs)"
+date: 2025-11-01 16:00:00 +0000
+categories: [active-directory, acls, access-control]
+tags: [acl, dacl, sacl, permissions, access-tokens, security-descriptors]
+description: "Understanding how Active Directory controls access through tokens, security descriptors, and access control lists - the foundation of AD security"
+---
+
+# Active Directory 101: Access Control Lists (ACLs)
+*Understanding How AD Controls Access*
+
+---
+
+## Access Control Overview
+
+Every time you try to access something in Active Directory, Windows asks two fundamental questions that form the basis of all security decisions:
+
+**1. Who are you?** (Authentication)
+**2. What can you do?** (Authorization)
+
+While authentication verifies identity, authorization determines what actions that identity can perform. This section focuses on the authorization mechanisms that protect Active Directory resources through a sophisticated system of tokens, permissions, and access control lists.
+
+---
+
+## Access Tokens: Your Security Badge
+
+<div class="key-concept" markdown="1">
+Think of an access token as a **digital security badge** that Windows creates when you log in.
+</div>
+
+Access tokens serve as the fundamental security mechanism in Windows, carrying all the information needed to make authorization decisions. These tokens accompany every process and thread, ensuring that Windows can validate permissions for any requested action.
+
+### What's Inside Your Token?
+
+Access tokens contain several critical components that define your security context:
+
+**Your SID (Security Identifier)** uniquely identifies your user account across the entire forest. This permanent identifier remains constant even if you change usernames or move between domains.
+
+**Group SIDs** include all security groups you belong to, whether directly assigned or inherited through nested group membership. These group memberships often provide the majority of your effective permissions.
+
+**Privileges** represent special rights that extend beyond normal permissions, such as "Backup Files and Directories" or "Debug Programs." These system-level capabilities can override standard access controls.
+
+**Session Information** captures contextual data about when and where you logged in, including logon type and authentication method.
+
+### Two Types of Tokens
+
+**Primary Tokens** represent your main identity and are associated with every process you run. These tokens persist throughout your session and carry your complete security context.
+
+**Impersonation Tokens** provide temporary identity changes for specific tasks. Services commonly use these tokens to perform actions on behalf of other users while maintaining their own primary identity.
+
+---
+
+## Security Descriptors: The Access Rules
+
+Every object in Active Directory has a Security Descriptor that serves as its complete access control specification. This structure contains all the information needed to determine who can access the object and what actions they can perform.
+
+```
+Security Descriptor
+├── Owner SID (Who owns this object)
+├── Group SID (Primary group)
+├── DACL (Who can access and what they can do)
+└── SACL (What access should be audited)
+```
+
+### The Two Critical Lists
+
+**DACL (Discretionary Access Control List)** functions as the "bouncer's list" that determines who gets access and what they can do. This list contains Access Control Entries (ACEs) that specify permissions for users and groups. DACLs represent the most important component for day-to-day security operations.
+
+**SACL (System Access Control List)** operates as the "security camera" that determines what activities get logged for auditing purposes. While often overlooked, SACLs prove crucial for detection and compliance requirements. Proper SACL configuration enables security teams to monitor and respond to suspicious activities.
+
+---
+
+## Access Control Entries (ACEs): The Building Blocks
+
+Access Control Entries represent the fundamental units of permission within ACLs. Each ACE follows a simple but powerful formula:
+
+```
+[WHO] + [WHAT PERMISSION] + [ALLOW/DENY]
+```
+
+### Example ACEs
+
+- **Domain Admins** → Full Control → ALLOW
+- **HR-Group** → Read Properties → ALLOW  
+- **Guest** → Delete → DENY
+
+### Common Permissions
+
+Understanding standard permissions helps identify potential security risks:
+
+**GenericAll** provides complete control over an object, essentially granting "the keys to the kingdom." This permission allows all possible actions and should be carefully restricted.
+
+**GenericWrite** enables modification of object properties, which can lead to privilege escalation depending on the target object type.
+
+**WriteDacl** allows changing permissions on an object, representing one of the most dangerous permissions since it enables self-privilege escalation.
+
+**WriteOwner** permits changing object ownership, which can lead to gaining WriteDacl permissions and subsequent privilege escalation.
+
+**ReadProperty** grants access to read specific attributes, which may expose sensitive information depending on the properties involved.
+
+**Self** enables performing specific operations typically related to modifying one's own attributes or group memberships.
+
+---
+
+## Permissions vs User Rights
+
+Understanding the distinction between permissions and user rights proves essential for comprehensive security analysis:
+
+### Permissions
+Permissions apply to **objects** (files, users, computers) and control specific actions on those resources:
+- Read this file
+- Modify that user  
+- Delete this group
+
+### User Rights
+User rights apply to **accounts** and control what they can do system-wide:
+- Log on locally
+- Backup files and directories
+- Shut down the system
+
+<div class="security-warning" markdown="1">
+**Important:** User rights can override permissions! For example, Backup Operators can read any file regardless of DACL settings.
+</div>
+
+---
+
+## Real-World ACL Vulnerabilities
+
+### Example 1: Exchange Privilege Escalation
+
+<div class="vulnerability-box" markdown="1">
+**The Problem:** Exchange servers were given "WriteDACL" permission on all groups
+</div>
+
+This vulnerability demonstrates how excessive service permissions can lead to complete domain compromise:
+
+1. Compromise any user with a mailbox
+2. Use Exchange Web Services to relay authentication  
+3. Modify DACL on "Domain Admins" group
+4. Add yourself to Domain Admins
+5. Achieve complete domain control
+
+**The Fix:** Remove excessive Exchange permissions and implement least privilege principles.
+
+### Example 2: Misconfigured Service Account
+
+```
+Sales-App-Svc → WriteDacl → Domain Controllers OU
+```
+
+<div class="vulnerability-box" markdown="1">
+**Why it's bad:** Service account compromise equals domain compromise
+</div>
+
+This scenario illustrates how service account misconfigurations can provide direct paths to domain controller compromise.
+
+---
+
+## How Access Decisions Are Made
+
+The access check process follows a systematic approach that ensures consistent security decisions:
+
+### The Access Check Process
+
+1. **User requests access** to an object
+2. **Windows checks the user's token** (Who are you? What groups?)
+3. **Reads the object's DACL** (What's allowed?)
+4. **Evaluates ACEs in order**:
+   - Explicit DENY always wins
+   - Then explicit ALLOW
+   - Then inherited permissions
+5. **Grants or denies access**
+
+### Golden Rules
+
+These fundamental principles govern all access decisions:
+
+**Deny beats Allow** - Explicit deny permissions always override allow permissions, regardless of other factors.
+
+**Explicit beats Inherited** - Permissions set directly on an object take precedence over those inherited from parent containers.
+
+**Most specific wins** - More specific permissions override general ones in the evaluation process.
+
+---
+
+## Common ACL Attack Patterns
+
+### 1. ACL Abuse Chain
+```
+User → GenericWrite on Group → Group has Admin Rights → Escalation
+```
+
+### 2. Owner Rights Abuse  
+```
+User → Owns Object → Can change DACL → Grants self full control
+```
+
+### 3. Transitive Permissions
+```
+User → Admin on Computer → Computer Account has rights → Lateral movement
+```
+
+### Tools That Hunt These Vulnerabilities
+
+**BloodHound** maps ACL paths and identifies attack routes through complex permission relationships.
+
+**PowerView** enumerates permissions and provides detailed analysis of access control configurations.
+
+**PingCastle** identifies risky ACLs and provides comprehensive security assessments.
+
+---
+
+## Best Practices for ACL Security
+
+### 1. Principle of Least Privilege
+Organizations should only grant permissions that are absolutely necessary for job functions. Regular reviews help identify and remove unnecessary permissions that accumulate over time.
+
+### 2. Avoid Dangerous Permissions
+Never grant these permissions broadly across the organization:
+- **GenericAll** - Complete control
+- **WriteDacl** - Permission modification  
+- **WriteOwner** - Ownership changes
+- **AllExtendedRights** - All extended permissions
+
+### 3. Monitor High-Value Targets
+Maintain extra vigilance on critical resources:
+- **Domain Controllers** - Core infrastructure
+- **Admin groups** - Privileged accounts
+- **Service accounts** - Automated processes
+- **GPO objects** - Policy management
+
+### 4. Use Groups Wisely
+Implement role-based security groups that align with business functions. Avoid complex nested group structures that can create unexpected permission inheritance. Document the purpose and scope of each security group to ensure proper management.
+
+---
+
+## ACL Auditing Commands
+
+```powershell
+# View ACL on an object
+Get-Acl "AD:\CN=Domain Admins,CN=Users,DC=domain,DC=com"
+
+# Find who can modify Domain Admins
+Get-ADGroup "Domain Admins" | 
+    Get-Acl | 
+    Select -ExpandProperty Access | 
+    Where {$_.ActiveDirectoryRights -match "Write"}
+
+# Check your effective permissions
+whoami /priv
+```
+
+### What to Look For in Audits
+
+Regular audits should focus on identifying these security concerns:
+
+**Unexpected owners** may indicate privilege escalation or account compromise.
+
+**Non-admin users with write permissions** often represent the most common ACL misconfiguration.
+
+**Service accounts with excessive rights** create opportunities for privilege escalation through service compromise.
+
+**Orphaned SIDs from deleted accounts** can maintain permissions long after accounts are removed.
+
+---
+
+## Key Takeaways
+
+<div class="takeaway-box" markdown="1">
+**Every access decision involves tokens and ACLs** - Understanding both components is crucial for effective security
+</div>
+
+<div class="takeaway-box" markdown="1">
+**DACLs control access, SACLs control auditing** - Don't ignore SACLs in your security strategy
+</div>
+
+<div class="takeaway-box" markdown="1">
+**Some permissions are more dangerous than others** - WriteDacl, WriteOwner, and GenericAll represent the "deadly sins" of ACL security
+</div>
+
+<div class="takeaway-box" markdown="1">
+**ACL misconfigurations are a primary attack vector** - Many security breaches begin with ACL abuse
+</div>
+
+<div class="takeaway-box" markdown="1">
+**Regular auditing is essential** - ACLs drift over time, creating security gaps that require ongoing management
+</div>
+
+---
+
+## Coming Next: Section 3 - Domain Controllers
+
+The next section will explore the heart of Active Directory infrastructure:
+
+- What makes Domain Controllers special
+- The NTDS.dit database structure
+- FSMO roles and their security implications  
+- Protecting Domain Controllers from compromise
+
+---
+
+*This post is part of the Active Directory 101 series. Understanding ACLs provides the foundation for comprehending how Active Directory enforces security across enterprise environments.*

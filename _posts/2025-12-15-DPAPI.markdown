@@ -1,0 +1,252 @@
+---
+layout: post
+title: "Active Directory 101: DPAPI (Data Protection API)"
+date: 2025-12-15 13:00:00 +0000
+categories: [active-directory, dpapi, credential-extraction]
+tags: [dpapi, windows-secrets, donpapi, credential-harvesting, certificates, passwords]
+description: "Master DPAPI exploitation with DonPAPI - extracting Windows secrets, browser passwords, certificates, and achieving domain compromise"
+---
+
+# Active Directory 101: DPAPI (Data Protection API)
+*Extracting Windows Secrets*
+
+---
+
+## What is DPAPI?
+
+<div class="key-concept" markdown="1">
+**DPAPI = Data Protection API**
+</div>
+
+The Data Protection API represents a Windows security feature that enables applications to store sensitive data through encrypted mechanisms. This system allows various applications to securely store sensitive information including passwords, certificates, and authentication tokens. The protected data resides in the user's directory, secured by encryption keys derived from the user's login password.
+
+Storage occurs in a specific location: `C:\Users\$USER\AppData\Roaming\Microsoft\Protect\$SUID\$GUID`, where attackers focus their extraction efforts.
+
+<div class="warning-box" markdown="1">
+**Attacker Goal:** Extract and decrypt DPAPI-protected secrets to find passwords, tokens, and certificates!
+</div>
+
+---
+
+## What Data Can We Extract?
+
+DPAPI protection extends across a vast array of sensitive information, creating a treasure trove for attackers who successfully compromise these stores:
+
+### Browser Data
+Modern web browsers represent one of the richest sources of DPAPI-protected information. **Chrome and Edge credentials** include saved passwords and comprehensive login data that users accumulate over months or years of web browsing. **Cookies and session tokens** provide active authentication tokens that can maintain access to web services long after initial compromise. **Chrome refresh tokens** contain OAuth credentials that enable persistent access to cloud services. **Firefox saved passwords** offer another credential store, though Mozilla uses slightly different protection mechanisms. **Session data** encompasses active browser sessions that may include authenticated access to corporate resources.
+
+### Network & System Data
+Network-related credentials often prove invaluable for lateral movement within enterprise environments. **WiFi passwords** enable attackers to access wireless networks and potentially bypass network segmentation controls. **VNC credentials** provide remote desktop access to systems throughout the organization. **VPN configurations** may include authentication details that allow network boundary bypass. **Windows certificates** encompass both system and user certificates that can enable advanced authentication attacks. **Desktop files and recent document access** patterns reveal user behavior and potential high-value targets.
+
+### Application Data
+Specialized applications frequently store credentials through DPAPI mechanisms. **MobaXterm credentials** include SSH and terminal passwords that developers and administrators use for system access. **RDP saved passwords** provide remote desktop credentials for accessing servers and workstations. **SSH private keys** enable passwordless authentication to Linux systems and cloud infrastructure. **Recycle bin files** may contain deleted but recoverable sensitive data. **Cached credentials** from various applications provide backup access methods when primary authentication fails.
+
+---
+
+## DonPAPI - The Ultimate Tool
+
+<div class="tool-showcase" markdown="1">
+**DonPAPI: The Swiss Army Knife for DPAPI Extraction**
+
+Automatically extracts and decrypts DPAPI-protected data from Windows systems
+</div>
+
+DonPAPI represents a comprehensive solution for DPAPI exploitation, providing automated extraction and analysis capabilities that streamline the credential harvesting process.
+
+### DonPAPI Workflow
+
+The tool operates through four distinct phases. First, it **scans** target systems to locate DPAPI blobs across various storage locations. Second, it **decrypts** discovered data using available user credentials and masterkeys. Third, it **parses** the decrypted information to extract readable passwords, tokens, and certificates. Finally, it **generates reports** in organized HTML format for efficient analysis.
+
+---
+
+## DonPAPI in Action
+
+### Basic Usage
+
+```bash
+# Basic DonPAPI usage
+DonPAPI collect -d domain.local -u username -p password -t target-ip
+```
+
+### Domain Scan Demo
+
+```bash
+# Scan ESSOS domain for DPAPI secrets
+proxychains DonPAPI collect -d 'ESSOS.LOCAL' -u 'daenerys.targaryen' -p 'BurnThemAll!' -t 192.168.56.23
+```
+
+### Expected Output
+
+```
+[+] DonPAPI Version 2.0.1
+[+] Output directory at /home/auditor/.donpapi
+[+] Loaded 1 targets
+[192.168.56.23] [+] Starting gathering creds
+[192.168.56.23] [+] Dumping SAM
+[192.168.56.23] [S] [SAM] Got 4 accounts
+[192.168.56.23] [S] [LSA] (Unknown User):YouWillNotKerboroastingMeeeee
+[192.168.56.23] [S] [DPAPI] Got 7 masterkeys
+[192.168.56.23] [+] Dumping User Chromium Browsers
+[192.168.56.23] [+] Dumping User and Machine Certificates
+[192.168.56.23] [S] [Certificates] [SYSTEM] - VAGRANT - VAGRANT_GD084443G50GE8D1.pfx
+```
+
+The output demonstrates successful extraction across multiple data categories, revealing both the breadth and depth of information available through DPAPI exploitation.
+
+---
+
+## DonPAPI Results Analysis
+
+### Discovered Data Types
+
+| Data Type | Description | Value |
+|-----------|-------------|--------|
+| **LSA Secrets** | Service account passwords, machine credentials, cached domain credentials | High |
+| **DPAPI Masterkeys** | 7 masterkeys found - used to decrypt user data | Critical |
+| **Certificates** | System certificates, user certificates, machine authentication certs | High |
+| **Browser Data** | Chrome/Edge passwords, cookies and tokens, saved form data | Medium |
+
+The analysis reveals varying value levels across different data types, with DPAPI masterkeys representing the most critical findings due to their ability to unlock additional protected information.
+
+---
+
+## DonPAPI Web Interface
+
+### Launch GUI
+
+```bash
+# Launch DonPAPI web interface
+proxychains DonPAPI gui
+# * Serving Flask app 'donpapi.server'
+# * Running on http://127.0.0.1:8888
+```
+
+### Analyzing Results with the GUI
+
+The web interface organizes findings through specialized tabs designed for efficient analysis. The **General Tab** provides a comprehensive overview of all collected data across different categories. The **Cookies Tab** focuses specifically on browser session tokens that enable immediate access to web services. The **Secrets Tab** contains extracted passwords and authentication credentials. The **Certificates Tab** displays discovered certificates and associated private keys.
+
+### Key Findings Example
+
+<div class="success-box" markdown="1">
+**Typical Discovery Results:**
+- **Computer:** BRAAVOS, MEEREEN, WINTERFELL
+- **Windows User:** SYSTEM
+- **Username:** VAGRANT
+- **Client Auth:** Available certificates for authentication
+</div>
+
+---
+
+## Certificate Extraction & Usage
+
+### Certificate Attack Flow
+
+The certificate exploitation process follows a systematic three-step approach. Initially, DonPAPI **finds and extracts** certificate files in .pfx format from protected storage locations. Subsequently, attackers **obtain Ticket Granting Tickets** using the extracted certificates for Kerberos authentication. Finally, they **extract NT hashes** from the authentication process, enabling additional attack vectors.
+
+### Certificate Authentication
+
+```bash
+# Use extracted certificate for authentication
+proxychains certipy auth -pfx '/home/auditor/.donpapi/loot/192.168.56.11/winterfell.north.sevenkingdoms.local_953B926BB18D96AB.pfx'
+```
+
+**Expected Result:**
+```
+[*] Using principal: winterfell$@north.sevenkingdoms.local
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saved credential cache to 'winterfell.ccache'
+[*] Trying to retrieve NT hash for 'winterfell$'
+[*] Got hash for 'winterfell$@north.sevenkingdoms.local': aad3b435b51404eeaad3b435b51404ee:2bc409ba647a84b2f7ad0093c528fd716
+```
+
+<div class="success-box" markdown="1">
+**Success!** We now have the machine account hash for potential further attacks!
+</div>
+
+---
+
+## DPAPI Attack Scenarios
+
+### Corporate Espionage
+Corporate espionage scenarios leverage DPAPI extraction to **steal saved passwords** from business applications and service accounts. Attackers **extract browser sessions** that maintain active connections to cloud services including Microsoft 365, AWS, and Azure platforms. This access often provides immediate entry into corporate cloud infrastructure without requiring additional authentication.
+
+### Lateral Movement
+Network expansion becomes possible through **WiFi credentials** that enable access to wireless networks and potentially bypass network segmentation controls. **RDP saved passwords** facilitate remote desktop access to additional systems throughout the organization. **VPN configurations** may include authentication details that allow attackers to tunnel past network boundaries and access internal resources.
+
+### Certificate Abuse
+Advanced attackers exploit **machine certificates** for system authentication and potential domain controller access. **Kerberos authentication** using extracted certificates enables access to domain services with machine-level privileges. **Domain privilege escalation** becomes possible when machine certificates provide pathways to administrative access across the Active Directory environment.
+
+### Persistence
+Long-term access maintenance utilizes **browser tokens** that remain valid for extended periods. **Long-lived sessions** provide persistent authentication to critical services. **Cached credentials** serve as backup access methods when primary authentication mechanisms are detected or blocked by security controls.
+
+---
+
+## Defense Strategies
+
+<div class="warning-box" markdown="1">
+**Defense Strategies:**
+
+- **Enable Credential Guard** - Hardware-based credential protection
+- **Use hardware-backed certificates** - TPM-based certificate storage
+- **Implement proper endpoint protection** - EDR and behavioral monitoring
+- **Monitor for unusual DPAPI access** - Detect bulk credential extraction
+</div>
+
+### Detection Methods
+
+Security teams should monitor for mass DPAPI blob access patterns that indicate automated extraction tools. Watch for unusual certificate usage patterns that suggest compromised machine accounts. Detect browser credential database access that occurs outside normal user behavior. Alert on multiple authentication attempts using extracted credentials across different services.
+
+---
+
+## DPAPI Key Takeaways
+
+<div class="takeaway-box" markdown="1">
+**DPAPI stores treasure:** Passwords, certificates, tokens, WiFi keys
+</div>
+
+<div class="takeaway-box" markdown="1">
+**DonPAPI is powerful:** Automated extraction and analysis
+</div>
+
+<div class="takeaway-box" markdown="1">
+**Machine certificates:** Can lead to domain compromise
+</div>
+
+<div class="takeaway-box" markdown="1">
+**Browser data:** Often contains high-value credentials
+</div>
+
+<div class="takeaway-box" markdown="1">
+**Primary targets:** Workstations, servers, and developer machines
+</div>
+
+<div class="takeaway-box" markdown="1">
+**Web GUI:** Check the interface for organized results
+</div>
+
+---
+
+## Complete DonPAPI Workflow
+
+```bash
+# Complete DonPAPI workflow
+1. DonPAPI collect -d domain -u user -p pass -t target
+2. DonPAPI gui  # Analyze results
+3. Use extracted certificates/passwords for further attacks
+```
+
+<div class="warning-box" markdown="1">
+**DPAPI can contain the keys to the kingdom!**
+
+Always check user workstations for stored credentials and certificates
+</div>
+
+---
+
+## References
+
+- [DonPAPI Tool](https://github.com/login-securite/DonPAPI)
+- [Microsoft DPAPI Documentation](https://docs.microsoft.com/en-us/windows/win32/api/dpapi/)
+- [Certipy Certificate Tool](https://github.com/ly4k/Certipy)
+- [Windows Credential Guard](https://docs.microsoft.com/en-us/windows/security/identity-protection/credential-guard/)

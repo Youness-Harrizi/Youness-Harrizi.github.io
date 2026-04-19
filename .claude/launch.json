@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jekyll",
+      "runtimeExecutable": "bundle",
+      "runtimeArgs": ["exec", "jekyll", "serve", "--baseurl", ""],
+      "cwd": "C:/Users/pc/Desktop/claude-code/Youness-Harrizi.github.io",
+      "port": 4000
+    }
+  ]
+}

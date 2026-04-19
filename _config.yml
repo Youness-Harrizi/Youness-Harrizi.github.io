@@ -1,0 +1,26 @@
+title: Youness Harrizi | Security Researcher
+description: Deep-dives into Active Directory exploitation, Windows internals, and advanced penetration testing methodologies.
+email: younessharrizi4@gmail.com
+url: https://youness-harrizi.github.io
+baseurl: ""
+
+author:
+  name: Youness Harrizi
+  email: younessharrizi4@gmail.com
+
+github_username: Youness-Harrizi
+linkedin_username: harrizi-youness
+
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
