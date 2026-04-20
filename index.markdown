@@ -21,6 +21,16 @@ title: Home
 
     <article class="post-card">
       <div class="post-card-meta">
+        <span class="post-tag">NAC Bypass</span>
+        <span class="post-date-label">Apr 2026</span>
+      </div>
+      <h3><a href="/network/nac/lateral-movement/2026/04/20/NAC-Bypass.html">Wired NAC Bypass: Getting Past 802.1x</a></h3>
+      <p>Transparent bridge attack to bypass wired Network Access Control — passive listening, traffic injection, and MAC/IP spoofing.</p>
+      <a href="/network/nac/lateral-movement/2026/04/20/NAC-Bypass.html" class="post-card-read">Read &rarr;</a>
+    </article>
+
+    <article class="post-card">
+      <div class="post-card-meta">
         <span class="post-tag">ADCS</span>
         <span class="post-date-label">Jan 2026</span>
       </div>
