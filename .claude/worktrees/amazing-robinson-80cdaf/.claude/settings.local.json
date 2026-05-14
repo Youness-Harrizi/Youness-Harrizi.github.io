@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(git -C \"C:\\\\Users\\\\pc\\\\Desktop\\\\claude-code\\\\Youness-Harrizi.github.io\" branch -D claude/amazing-robinson-80cdaf)",
-      "Bash(git -C \"C:\\\\Users\\\\pc\\\\Desktop\\\\claude-code\\\\Youness-Harrizi.github.io\" log --oneline -3)"
-    ]
-  }
-}
