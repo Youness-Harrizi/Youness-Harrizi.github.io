@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "EDR Bypass: A Complete Methodology"
-date: 2026-05-14 10:00:00 +0000
+date: 2026-05-14 00:00:00 +0000
 categories: [windows, edr, red-team]
 tags: [edr-bypass, syscalls, unhooking, byovd, hell-gate, red-team]
 description: "A structured deep-dive into EDR bypass techniques — from API unhooking and direct syscalls to BYOVD, Godfault, and hardware breakpoints."
