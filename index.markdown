@@ -21,6 +21,16 @@ title: Home
 
     <article class="post-card">
       <div class="post-card-meta">
+        <span class="post-tag">EDR Bypass</span>
+        <span class="post-date-label">May 2026</span>
+      </div>
+      <h3><a href="/windows/edr/red-team/2026/05/14/EDR-Bypass.html">EDR Bypass: A Complete Methodology</a></h3>
+      <p>Structured methodology covering unhooking, syscalls, BYOVD, Godfault, and hardware breakpoints.</p>
+      <a href="/windows/edr/red-team/2026/05/14/EDR-Bypass.html" class="post-card-read">Read &rarr;</a>
+    </article>
+
+    <article class="post-card">
+      <div class="post-card-meta">
         <span class="post-tag">NAC Bypass</span>
         <span class="post-date-label">Apr 2026</span>
       </div>
