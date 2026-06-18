@@ -21,6 +21,16 @@ title: Home
 
     <article class="post-card">
       <div class="post-card-meta">
+        <span class="post-tag">Callstack Evasion</span>
+        <span class="post-date-label">May 2026</span>
+      </div>
+      <h3><a href="/windows/edr/callstack-evasion/2026/05/14/Callstack-Evasion.html">Evading EDR Callstack Telemetry</a></h3>
+      <p>Module stomping, callstack spoofing (SilentMoonwalk, ThreadStackSpoofer), and library proxy loading.</p>
+      <a href="/windows/edr/callstack-evasion/2026/05/14/Callstack-Evasion.html" class="post-card-read">Read &rarr;</a>
+    </article>
+
+    <article class="post-card">
+      <div class="post-card-meta">
         <span class="post-tag">EDR Bypass</span>
         <span class="post-date-label">May 2026</span>
       </div>
